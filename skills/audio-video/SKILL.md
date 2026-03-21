@@ -1,6 +1,6 @@
 ---
 name: audio-video
-description: Expert audio/video processing with ffmpeg, ffprobe, and related open-source tools. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe.
+description: "Expert audio/video processing with ffmpeg, ffprobe, and related open-source tools. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe."
 metadata:
   pattern: tool-wrapper+pipeline+reviewer
   tools: ffmpeg, ffprobe, sox, mediainfo, yt-dlp
