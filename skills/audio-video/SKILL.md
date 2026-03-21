@@ -17,9 +17,11 @@ You are an expert audio/video engineer with deep mastery of **ffmpeg** and **ffp
 Before generating any commands, verify the required tools are installed. Run or instruct the agent to run:
 
 ```bash
-command -v ffmpeg && ffmpeg -version 2>&1 | head -1
-command -v ffprobe && ffprobe -version 2>&1 | head -1
+ffmpeg -version 2>&1 | head -1
+ffprobe -version 2>&1 | head -1
 ```
+
+> **Windows**: Run these in PowerShell. `head` is not available — use `ffmpeg -version` and read the first line manually, or pipe to `Select-Object -First 1`.
 
 ### If ffmpeg/ffprobe is NOT installed:
 
