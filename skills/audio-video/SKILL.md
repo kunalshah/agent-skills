@@ -2,13 +2,13 @@
 name: audio-video
 description: "Expert audio/video processing with ffmpeg, ffprobe, and related open-source tools. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe."
 metadata:
-  tools: ffmpeg, ffprobe, sox, mediainfo
+  tools: ffmpeg, ffprobe
   platforms: macOS, Linux, Windows
 ---
 
 # Audio/Video Processing Skill
 
-You are an expert audio/video engineer with deep mastery of **ffmpeg**, **ffprobe**, **SoX**, **mediainfo**, and related open-source tools. You produce correct, efficient, copy-safe shell commands with clear explanations.
+You are an expert audio/video engineer with deep mastery of **ffmpeg**, **ffprobe**, and related open-source tools. You produce correct, efficient, copy-safe shell commands with clear explanations.
 
 ---
 
@@ -19,8 +19,6 @@ Before generating any commands, verify the required tools are installed. Run or 
 ```bash
 command -v ffmpeg && ffmpeg -version 2>&1 | head -1
 command -v ffprobe && ffprobe -version 2>&1 | head -1
-command -v mediainfo && mediainfo --Version 2>&1 | head -1
-command -v sox && sox --version 2>&1
 ```
 
 ### If ffmpeg/ffprobe is NOT installed:
@@ -96,8 +94,8 @@ ffprobe -v error -show_entries format=filename,duration,size,bit_rate \
   -show_entries stream=index,codec_name,codec_type,width,height,r_frame_rate,bit_rate,sample_rate,channels \
   -of default=noprint_wrappers=1 input.mp4
 
-# mediainfo (richer metadata, human-readable)
-mediainfo input.mp4
+# Human-readable full metadata summary
+ffprobe -v quiet -print_format json -show_format -show_streams input.mp4 | python3 -m json.tool
 ```
 
 ### Key facts to extract before any operation:
@@ -305,8 +303,8 @@ ffmpeg -i "input.mp3" -af "highpass=f=80" "output.mp3"
 # Low-pass filter (remove high frequencies above 8kHz)
 ffmpeg -i "input.mp3" -af "lowpass=f=8000" "output.mp3"
 
-# Noise reduction with SoX
-sox "input.wav" "output.wav" noisered noise.prof 0.21
+# Noise reduction (non-local means denoising)
+ffmpeg -i "input.wav" -af "anlmdn=s=7:p=0.002:r=0.002:m=15" "output.wav"
 
 # Dynamic range compression
 ffmpeg -i "input.mp3" \
@@ -322,22 +320,23 @@ ffmpeg -i "input.mp3" \
   "output_faded.mp3"
 ```
 
-### B5. SoX Audio Processing
+### B5. Advanced Audio Processing
 ```bash
-# Trim silence
-sox "input.wav" "output.wav" silence 1 0.1 1% -1 0.1 1%
+# Trim silence (remove leading/trailing silence)
+ffmpeg -i "input.wav" -af "silenceremove=start_periods=1:start_silence=0.1:start_threshold=0.01:stop_periods=-1:stop_silence=0.1:stop_threshold=0.01" "output.wav"
 
-# Speed change (pitch preserved)
-sox "input.wav" "output.wav" speed 1.5
+# Speed change (pitch preserved using atempo, supports 0.5–2.0 range)
+ffmpeg -i "input.wav" -af "atempo=1.5" "output.wav"
 
-# Pitch shift (without tempo change)
-sox "input.wav" "output.wav" pitch 200  # +200 cents = +2 semitones
+# Pitch shift (without tempo change, shift up by 2 semitones)
+ffmpeg -i "input.wav" -af "asetrate=44100*1.122,aresample=44100,atempo=0.891" "output.wav"
 
-# Generate waveform data
-sox "input.wav" -n stat 2>&1
+# Generate waveform data (stats/loudness info)
+ffprobe -v quiet -of json -show_streams "input.wav"
+ffmpeg -i "input.wav" -af "astats" -f null - 2>&1
 
 # Generate spectrogram PNG
-sox "input.wav" -n spectrogram -o "spectrogram.png"
+ffmpeg -i "input.wav" -lavfi "showspectrumpic=s=1024x512:mode=combined" -update 1 "spectrogram.png"
 ```
 
 ---
