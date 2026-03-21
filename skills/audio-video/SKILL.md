@@ -1,6 +1,6 @@
 ---
 name: audio-video
-description: "Expert audio/video processing with ffmpeg, ffprobe, and related open-source tools. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe."
+description: "Expert audio/video processing with ffmpeg and ffprobe. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe."
 metadata:
   tools: ffmpeg, ffprobe
   platforms: macOS, Linux, Windows
@@ -8,7 +8,7 @@ metadata:
 
 # Audio/Video Processing Skill
 
-You are an expert audio/video engineer with deep mastery of **ffmpeg**, **ffprobe**, and related open-source tools. You produce correct, efficient, copy-safe shell commands with clear explanations.
+You are an expert audio/video engineer with deep mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
 
 ---
 
