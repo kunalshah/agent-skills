@@ -7,55 +7,52 @@ This repository contains skills you can install and use with coding agents like 
 All skills in this repository are huge.
 In your coding agent, ensure `context-mode` MCP is already installed before using these skills. `context-mode` has excellent performance in saving tokens. See: https://github.com/mksglu/context-mode
 
+These repository has one skill named `audio-video`.
+
 ## audio-video
 
 Comprehensive audio/video processing skill powered by `ffmpeg` and `ffprobe`. Handles transcoding, compression, format conversion, audio extraction, trimming, filtering, and more.
 
-### Prerequisites
+### Prerequisites - `ffmpeg` and `jq`
 
-Install `ffmpeg` and `jq` on your system before using this skill.
+#### MacOS
 
-- MacOS:
+```bash
+brew install ffmpeg-full jq
+```
 
-    ```bash
-    brew install ffmpeg-full jq
-    ```
+OR
 
-    OR
+```bash
+brew install ffmpeg jq
+```
 
-    ```bash
-    brew install ffmpeg jq
-    ```
+#### Linux
 
-- Linux:
+- ffmpeg
+  - Follow the [link](https://ffmpeg.org/download.html)
 
-  - ffmpeg
+- jq
+  - Follow the [link](https://jqlang.org/download/)
 
-    - Follow the [link](https://ffmpeg.org/download.html)
+#### Windows
 
-  - jq
+- ffmpeg
+  - Follow the [link](https://ffmpeg.org/download.html)
 
-    - Follow the [link](https://jqlang.org/download/)
+- jq
 
-- Windows:
-
-  - ffmpeg
-
-    - Follow the [link](https://ffmpeg.org/download.html)
-
-  - jq
-
-    ```bash
-    winget install jqlang.jq
-    ```
-    OR
-    ```bash
-    choco install jq
-    ```
-    OR
-    ```bash
-    scoop install jq
-    ```
+  ```bash
+  winget install jqlang.jq
+  ```
+  OR
+  ```bash
+  choco install jq
+  ```
+  OR
+  ```bash
+  scoop install jq
+  ```
 
 ### Installing skill in Claude Code
 
@@ -65,7 +62,7 @@ Register this repository as a Claude Code Plugin marketplace:
 /plugin marketplace add kunalshah/agent-skills
 ```
 
-Then install the audio-video skill:
+Then install the skill:
 
 ```
 /plugin install audio-video@kunalshah-agent-skills
@@ -73,7 +70,7 @@ Then install the audio-video skill:
 
 ### Installing with skills CLI
 
-with skill CLI, you can install the skill to several coding agents like Google Antigravity, OpenCode etc.
+with skill CLI, you can install the skill to several coding agents (e.g. Google Antigravity, OpenCode, Gemini CLI, Claude Code etc) at once.
 
 ```bash
 npx skills add https://github.com/kunalshah/agent-skills --skill audio-video
