@@ -203,9 +203,9 @@ ffmpeg -i "input.mp4" -i palette.png -ss 0 -t 10 \
 ```bash
 # Auto-calculate bitrate for 8MB target
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "input.mp4")
-VBR=$(echo "scale=0; (8*1024*8 / $DURATION - 128)" | bc)
+VBR=$(python3 -c "print(int(8*1024*8 / $DURATION - 128))")
 ffmpeg -i "input.mp4" \
-  -c:v libx264 -b:v "${VBR}k" -pass 1 -an -f null /dev/null 2>&1 && \
+  -c:v libx264 -b:v "${VBR}k" -pass 1 -an -f null - && \
 ffmpeg -i "input.mp4" \
   -c:v libx264 -b:v "${VBR}k" -pass 2 \
   -c:a aac -b:a 128k \
@@ -217,7 +217,7 @@ ffmpeg -i "input.mp4" \
 ```bash
 ffmpeg -i "input.mp4" \
   -vf "scale=640:-2" \
-  -c:v libx264 -b:v 500k -pass 1 -an -f null /dev/null && \
+  -c:v libx264 -b:v 500k -pass 1 -an -f null - && \
 ffmpeg -i "input.mp4" \
   -vf "scale=640:-2" \
   -c:v libx264 -b:v 500k -pass 2 \
@@ -240,7 +240,7 @@ ffmpeg -i "input.wav" \
 ### Audiobook (mono, loudness-normalized)
 ```bash
 # Pass 1: measure
-MEASURED=$(ffmpeg -i "input.mp3" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | tail -20)
+MEASURED=$(ffmpeg -i "input.mp3" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | python3 -c "import sys; print(''.join(sys.stdin.readlines()[-20:]))")
 # Pass 2: apply (fill in values from Pass 1)
 ffmpeg -i "input.mp3" \
   -af "loudnorm=I=-16:TP=-1.5:LRA=11:linear=true" \

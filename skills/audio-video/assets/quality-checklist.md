@@ -14,7 +14,8 @@ Use this checklist before delivering any encoded file. Run each verification com
 
 ### 1. File exists and is non-zero
 ```bash
-test -s "output.mp4" && echo "✓ File exists" || echo "✗ File missing or empty"
+ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+# Prints file size in bytes; errors if file is missing or empty
 ```
 
 ### 2. No corrupt packets
@@ -47,7 +48,8 @@ ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of defau
 
 ### 7. File size within target (if applicable)
 ```bash
-du -sh "output.mp4"
+ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+# Prints size in bytes
 ```
 
 ### 8. Playable (spot check — requires video player)
@@ -56,6 +58,8 @@ du -sh "output.mp4"
 open "output.mp4"
 # Linux
 mpv "output.mp4" 2>/dev/null || vlc "output.mp4"
+# Windows
+start "output.mp4"
 ```
 
 ### 9. Web MP4: moov atom at front

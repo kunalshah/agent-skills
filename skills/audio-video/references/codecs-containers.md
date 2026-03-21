@@ -93,15 +93,18 @@ Container: .mkv
 ## FFmpeg Codec Availability Check
 ```bash
 # List all available encoders
-ffmpeg -encoders 2>/dev/null | grep -E "^\s+[AV]"
+ffmpeg -encoders 2>&1
 
 # Check if specific encoder is available
-ffmpeg -encoders 2>/dev/null | grep libx265
-ffmpeg -encoders 2>/dev/null | grep libfdk_aac
+# macOS / Linux
+ffmpeg -encoders 2>&1 | grep libx265
+ffmpeg -encoders 2>&1 | grep libfdk_aac
+# Windows (PowerShell)
+# ffmpeg -encoders 2>&1 | Select-String libx265
 
 # List available decoders
-ffmpeg -decoders 2>/dev/null | grep -E "^\s+[AV]"
+ffmpeg -decoders 2>&1
 
 # List available formats
-ffmpeg -formats 2>/dev/null
+ffmpeg -formats 2>&1
 ```

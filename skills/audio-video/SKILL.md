@@ -730,15 +730,21 @@ DURATION=$(ffprobe -v error -show_entries format=duration \
   -of default=noprint_wrappers=1:nokey=1 "input.mp4")
 ffmpeg -i "input.mp4" -c:v libx264 -crf 23 \
   -progress pipe:1 "output.mp4" 2>/dev/null | \
-  awk -v dur="$DURATION" '/out_time_ms/{printf "\r%.1f%%", $2/1000000/dur*100}' \
-  FS='='
+  python3 -c "
+import sys, re
+dur = float('$DURATION')
+for line in sys.stdin:
+    m = re.match(r'out_time_ms=(\d+)', line)
+    if m:
+        print(f'\r{int(m.group(1))/1000000/dur*100:.1f}%', end='', flush=True)
+"
 ```
 
 ### I3. Two-Pass Encoding (Precise Bitrate Control)
 ```bash
 # Pass 1 (analysis only)
 ffmpeg -y -i "input.mp4" \
-  -c:v libx264 -b:v 2M -pass 1 -an -f null /dev/null
+  -c:v libx264 -b:v 2M -pass 1 -an -f null -
 
 # Pass 2 (encode with target bitrate)
 ffmpeg -i "input.mp4" \
@@ -896,9 +902,9 @@ ffmpeg -i "input.mp4" \
 ```bash
 # Calculate target bitrate for 8MB / duration
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "input.mp4")
-TARGET_KBPS=$(echo "scale=0; (8*1024*8 / $DURATION - 128) / 1" | bc)
+TARGET_KBPS=$(python3 -c "print(int(8*1024*8 / $DURATION - 128))")
 ffmpeg -i "input.mp4" \
-  -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 1 -an -f null /dev/null && \
+  -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 1 -an -f null - && \
 ffmpeg -i "input.mp4" \
   -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 2 \
   -c:a aac -b:a 128k \
