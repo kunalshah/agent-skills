@@ -239,12 +239,17 @@ ffmpeg -i "input.wav" \
 
 ### Audiobook (mono, loudness-normalized)
 ```bash
-# Pass 1: measure
-MEASURED=$(ffmpeg -i "input.mp3" -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | python3 -c "import sys; print(''.join(sys.stdin.readlines()[-20:]))")
-# Pass 2: apply (fill in values from Pass 1)
+# Pass 1: measure — run this first and note the JSON values printed at the end
 ffmpeg -i "input.mp3" \
-  -af "loudnorm=I=-16:TP=-1.5:LRA=11:linear=true" \
+  -af "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" \
+  -f null - 2>&1 | tail -n 20
+
+# Pass 2: apply — replace measured_* values with the numbers from Pass 1 output
+ffmpeg -i "input.mp3" \
+  -af "loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=<measured_I>:measured_TP=<measured_TP>:measured_LRA=<measured_LRA>:measured_thresh=<measured_thresh>:offset=<target_offset>:linear=true" \
   -ac 1 -ar 22050 \
   -c:a libmp3lame -q:a 4 \
   "audiobook.mp3"
+# Note: Pass 2 requires the actual measured values from Pass 1.
+# Using linear=true without them falls back to single-pass estimation.
 ```

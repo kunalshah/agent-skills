@@ -7,7 +7,7 @@ Use this checklist before delivering any encoded file. Run each verification com
 - [ ] Input probed with `ffprobe` — know source codec, resolution, fps, duration
 - [ ] Output directory exists and has write permissions
 - [ ] Sufficient disk space (estimate: bitrate × duration ÷ 8)
-- [ ] Codec is available in your ffmpeg build (`ffmpeg -encoders | grep <codec>`)
+- [ ] Codec is available in your ffmpeg build (`ffmpeg -encoders 2>&1 | grep <codec>` on macOS/Linux; `ffmpeg -encoders 2>&1 | Select-String <codec>` on Windows PowerShell)
 - [ ] Correct pixel format for codec (`yuv420p` for H.264 in MP4)
 
 ## Post-Encode Verification
@@ -22,6 +22,7 @@ ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=
 ```bash
 ffmpeg -v error -i "output.mp4" -f null - 2>&1
 # Expected: no output (silence = clean)
+# Note: 2>&1 works on macOS/Linux. On Windows PowerShell use: ffmpeg ... 2>&1 (same syntax in PS); on cmd.exe: 2>&1
 ```
 
 ### 3. Duration matches expected
@@ -58,6 +59,7 @@ ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=
 open "output.mp4"
 # Linux
 mpv "output.mp4" 2>/dev/null || vlc "output.mp4"
+# Note: 2>/dev/null is Linux/macOS only; on Windows omit it or use 2>NUL
 # Windows
 start "output.mp4"
 ```
@@ -72,6 +74,7 @@ ffprobe -v quiet -show_entries format_tags=major_brand -of default "output.mp4"
 ```bash
 ffmpeg -i "output.mp4" -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
 # max_volume should be ≤ -0.1 dB (not clipping)
+# Note: grep is not available on Windows — use PowerShell: ffmpeg ... 2>&1 | Select-String "mean_volume|max_volume"
 ```
 
 ## Quality Severity Levels

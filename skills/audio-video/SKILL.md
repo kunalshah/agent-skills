@@ -32,8 +32,10 @@ ffprobe -version 2>&1 | head -1
 # Option 1: Homebrew (recommended)
 brew install ffmpeg
 
-# Option 2: With all codecs (larger, more complete)
-brew install ffmpeg --with-all-extras 2>/dev/null || brew install ffmpeg
+# Note: Homebrew removed --with-* option flags. The default formula includes
+# the most common codecs. For a build with more codecs (libfdk-aac, etc.):
+#   brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg
+# See: https://formulae.brew.sh/formula/ffmpeg
 
 # Verify
 ffmpeg -version
@@ -46,7 +48,8 @@ sudo apt update && sudo apt install -y ffmpeg
 # Or for latest static build:
 wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
 tar xf ffmpeg-release-amd64-static.tar.xz
-sudo mv ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/
+FFDIR=$(find . -maxdepth 1 -type d -name 'ffmpeg-*-static' | head -n1)
+sudo mv "$FFDIR/ffmpeg" "$FFDIR/ffprobe" /usr/local/bin/
 ```
 
 #### Linux (RHEL/Fedora/CentOS)
@@ -74,7 +77,12 @@ scoop install ffmpeg
 
 #### Docker (any platform)
 ```bash
+# macOS / Linux
 docker run --rm -v "$(pwd):/work" -w /work jrottenberg/ffmpeg:latest \
+  -i input.mp4 output.mp4
+
+# Windows PowerShell
+docker run --rm -v "${PWD}:/work" -w /work jrottenberg/ffmpeg:latest `
   -i input.mp4 output.mp4
 ```
 
@@ -89,15 +97,15 @@ Always inspect input files before building commands. Load `references/ffprobe-an
 ### Quick probe
 ```bash
 # Full JSON output — machine-readable, use for scripting
-ffprobe -v quiet -print_format json -show_format -show_streams input.mp4
+ffprobe -v quiet -print_format json -show_format -show_streams "input.mp4"
 
 # Human-readable summary
 ffprobe -v error -show_entries format=filename,duration,size,bit_rate \
   -show_entries stream=index,codec_name,codec_type,width,height,r_frame_rate,bit_rate,sample_rate,channels \
-  -of default=noprint_wrappers=1 input.mp4
+  -of default=noprint_wrappers=1 "input.mp4"
 
 # Human-readable full metadata summary
-ffprobe -v quiet -print_format json -show_format -show_streams input.mp4 | python3 -m json.tool
+ffprobe -v quiet -print_format json -show_format -show_streams "input.mp4" | python3 -m json.tool
 ```
 
 ### Key facts to extract before any operation:
@@ -238,7 +246,8 @@ ffmpeg -i "input.mp4" "frames/frame_%04d.png"
 ffmpeg -i "input.mp4" -vf fps=1 "frames/frame_%04d.jpg"
 
 # Extract keyframes only
-ffmpeg -i "input.mp4" -vf "select=eq(pict_type\,I)" -vsync vfr "keyframe_%04d.jpg"
+# Note: -vsync vfr is deprecated since ffmpeg 5.1; use -fps_mode vfr on newer builds
+ffmpeg -i "input.mp4" -vf "select=eq(pict_type\,I)" -fps_mode vfr "keyframe_%04d.jpg"
 ```
 
 ---
@@ -285,7 +294,8 @@ ffmpeg -i "input_48k.wav" -ar 44100 "output_44k.wav"
 # Pass 1: Measure
 ffmpeg -i "input.mp3" \
   -af loudnorm=I=-23:TP=-1.5:LRA=11:print_format=json \
-  -f null - 2>&1 | tail -20
+  -f null - 2>&1 | tail -n 20
+# Note: tail -n 20 is required (not tail -20); tail is not available on Windows (use PowerShell: ... | Select-Object -Last 20)
 
 # Pass 2: Apply measured values (replace measured_* with Pass 1 output)
 ffmpeg -i "input.mp3" \
@@ -428,8 +438,8 @@ ffmpeg -i "input.mp4" \
 ffmpeg -i "input.mp4" -vf "transpose=1" -c:a copy "output_rotated.mp4"
 # transpose: 0=90°CCW+vflip, 1=90°CW, 2=90°CCW, 3=90°CW+vflip
 
-# Rotate 180°
-ffmpeg -i "input.mp4" -vf "transpose=2,transpose=2" -c:a copy "output_180.mp4"
+# Rotate 180° (faster alternative: vflip,hflip — same result without two transpose passes)
+ffmpeg -i "input.mp4" -vf "vflip,hflip" -c:a copy "output_180.mp4"
 
 # Flip horizontal (mirror)
 ffmpeg -i "input.mp4" -vf hflip -c:a copy "output_mirrored.mp4"
@@ -438,8 +448,9 @@ ffmpeg -i "input.mp4" -vf hflip -c:a copy "output_mirrored.mp4"
 ffmpeg -i "input.mp4" -vf vflip -c:a copy "output_vflip.mp4"
 
 # Auto-rotate from metadata (fix phone videos)
+# ffmpeg enables autorotate by default when re-encoding — simply re-encode without -noautorotate
+# Setting rotate=0 in metadata only clears the flag; it does NOT physically rotate the video
 ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -c:a copy \
-  -metadata:s:v:0 rotate=0 \
   "output_autorotate.mp4"
 ```
 
@@ -454,6 +465,7 @@ ffmpeg -i "input.mp4" \
   -c:a copy "output_square.mp4"
 
 # Auto-detect and remove black bars
+# Note: grep is not available on Windows — use: ffmpeg ... 2>&1 | Select-String crop  (PowerShell)
 ffmpeg -i "input.mp4" -vf "cropdetect=24:16:0" -f null - 2>&1 | grep crop
 # Then apply the detected crop value:
 ffmpeg -i "input.mp4" -vf "crop=1920:800:0:140" -c:a copy "output_cropped.mp4"
@@ -636,11 +648,14 @@ ffmpeg -f avfoundation -framerate 30 -i "1:0" \
   -c:a aac -b:a 192k \
   "screen_recording.mp4"
 
-# Linux (x11grab)
+# Linux (x11grab + PulseAudio)
 ffmpeg -f x11grab -r 30 -s 1920x1080 -i :0.0+0,0 \
   -f pulse -ac 2 -i default \
   -c:v libx264 -preset ultrafast -crf 18 \
   "screen_recording.mp4"
+# Note: -f pulse is PulseAudio. On modern Linux (Ubuntu 22.04+, PipeWire):
+# replace -f pulse -i default  with  -f pipewire -i default
+# or use pactl to find the correct PipeWire source name
 
 # Windows (gdigrab)
 ffmpeg -f gdigrab -framerate 30 -i desktop \
@@ -689,8 +704,9 @@ ffmpeg -i "input.gif" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "output
 ### H3. WebP Animation
 ```bash
 ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
-  -loop 0 -preset default -an -vsync 0 \
+  -loop 0 -preset default -an -fps_mode passthrough \
   "output.webp"
+# Note: -vsync 0 is deprecated since ffmpeg 5.1; use -fps_mode passthrough
 ```
 
 ---
@@ -699,18 +715,23 @@ ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
 
 ### I1. Batch Convert (Shell)
 ```bash
-# Convert all .mov files to .mp4
+# Convert all .mov files to .mp4 (bash/zsh — macOS/Linux only)
 for f in *.mov; do
   ffmpeg -i "$f" \
     -c:v libx264 -crf 23 -preset slow \
     -c:a aac -b:a 192k \
     -movflags +faststart \
     "${f%.mov}.mp4" \
-    && echo "✓ $f" || echo "✗ FAILED: $f"
+    && echo "Done: $f" || echo "FAILED: $f"
 done
 
-# Parallel batch (GNU parallel, 4 jobs)
-ls *.mov | parallel -j4 'ffmpeg -i {} -c:v libx264 -crf 23 {.}.mp4'
+# Windows PowerShell equivalent:
+# Get-ChildItem *.mov | ForEach-Object {
+#   ffmpeg -i $_.FullName -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 192k -movflags +faststart "$($_.BaseName).mp4"
+# }
+
+# Parallel batch (GNU parallel, 4 jobs) — avoids issues with spaces in filenames
+printf '%s\n' *.mov | parallel -j4 'ffmpeg -i {} -c:v libx264 -crf 23 {.}.mp4'
 ```
 
 ### I2. Progress Monitoring
@@ -720,8 +741,9 @@ ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 \
   -progress pipe:1 -nostats \
   "output.mp4" 2>/dev/null
+# Note: 2>/dev/null suppresses stderr on macOS/Linux. On Windows use: 2>NUL
 
-# Duration-aware progress percentage
+# Duration-aware progress percentage (bash/zsh — macOS/Linux)
 DURATION=$(ffprobe -v error -show_entries format=duration \
   -of default=noprint_wrappers=1:nokey=1 "input.mp4")
 ffmpeg -i "input.mp4" -c:v libx264 -crf 23 \
@@ -846,7 +868,7 @@ ffprobe -v error -show_entries \
 ffprobe -v error -show_entries stream=index,codec_type -of csv "output.mp4"
 
 # Verify no corrupt packets
-ffmpeg -v error -i "output.mp4" -f null - 2>&1 | head -20
+ffmpeg -v error -i "output.mp4" -f null - 2>&1 | head -n 20
 ```
 
 ---

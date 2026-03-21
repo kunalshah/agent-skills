@@ -95,6 +95,7 @@ ffprobe -v quiet -print_format json -show_chapters "input.mp4" | \
 ```
 
 ## Parse JSON with jq
+> **Note**: `jq` requires separate installation (`brew install jq` / `apt install jq` / `winget install jqlang.jq`). Use the Python section below if `jq` is unavailable.
 ```bash
 # Duration
 ffprobe -v quiet -print_format json -show_format "input.mp4" | jq '.format.duration | tonumber'

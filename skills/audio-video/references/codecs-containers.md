@@ -99,8 +99,10 @@ ffmpeg -encoders 2>&1
 # macOS / Linux
 ffmpeg -encoders 2>&1 | grep libx265
 ffmpeg -encoders 2>&1 | grep libfdk_aac
+
 # Windows (PowerShell)
-# ffmpeg -encoders 2>&1 | Select-String libx265
+ffmpeg -encoders 2>&1 | Select-String libx265
+ffmpeg -encoders 2>&1 | Select-String libfdk_aac
 
 # List available decoders
 ffmpeg -decoders 2>&1
