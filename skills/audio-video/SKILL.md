@@ -245,7 +245,6 @@ ffmpeg -i "input.mp4" -vf "select=eq(pict_type\,I)" -vsync vfr "keyframe_%04d.jp
 
 ## SECTION B — Audio Processing
 
-Load `references/audio-processing.md` for advanced audio patterns.
 
 ### B1. Audio Extraction
 ```bash
@@ -345,7 +344,6 @@ ffmpeg -i "input.wav" -lavfi "showspectrumpic=s=1024x512:mode=combined" -update 
 
 ## SECTION C — Video Editing
 
-Load `references/video-filters.md` for the complete filtergraph reference.
 
 ### C1. Trimming & Cutting
 ```bash
@@ -511,7 +509,6 @@ ffmpeg -i "input.mp4" \
 
 ## SECTION D — Subtitles & Captions
 
-Load `references/subtitle-formats.md` for format details.
 
 ### D1. Subtitle Operations
 ```bash
@@ -565,7 +562,6 @@ ffmpeg -i "input.mp4" -vf "fps=1/10,scale=320:-1" "thumbs/thumb_%04d.jpg"
 
 ## SECTION F — Streaming & Adaptive Bitrate
 
-Load `references/streaming-protocols.md` for protocol details.
 
 ### F1. HLS (HTTP Live Streaming)
 ```bash
@@ -964,9 +960,5 @@ After generating any command, always:
 - `references/ffprobe-analysis.md` — Complete ffprobe query patterns and JSON parsing
 - `references/codecs-containers.md` — Codec compatibility matrix and container guide
 - `references/ffmpeg-flags.md` — Complete flag reference with defaults and ranges
-- `references/audio-processing.md` — Advanced audio filter chains and SoX patterns
-- `references/video-filters.md` — Complete filtergraph examples and chaining patterns
-- `references/streaming-protocols.md` — HLS/DASH/RTMP/SRT protocol details
-- `references/subtitle-formats.md` — SRT/ASS/VTT/TTML format guide
 - `assets/platform-presets.md` — Ready-to-use presets for 20+ platforms
 - `assets/quality-checklist.md` — Pre-release quality verification checklist
