@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kunalshah-agent-skills",
+  "category": "productivity",
+  "owner": {
+    "name": "Kunal Shah",
+    "github": "https://github.com/kunalshah"
+  },
+  "metadata": {
+    "description": "Agent skills by Kunal Shah — audio/video processing and more",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "audio-video",
+      "description": "Audio and video processing with ffmpeg and ffprobe — transcode, compress, convert, extract audio, trim, filter, and more",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/audio-video"]
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+# Audio/Video Output Quality Checklist
+
+Use this checklist before delivering any encoded file. Run each verification command and confirm expected values.
+
+## Pre-Encode Checklist
+
+- [ ] Input probed with `ffprobe` — know source codec, resolution, fps, duration
+- [ ] Output directory exists and has write permissions
+- [ ] Sufficient disk space (estimate: bitrate × duration ÷ 8)
+- [ ] Codec is available in your ffmpeg build (`ffmpeg -encoders | grep <codec>`)
+- [ ] Correct pixel format for codec (`yuv420p` for H.264 in MP4)
+
+## Post-Encode Verification
+
+### 1. File exists and is non-zero
+```bash
+test -s "output.mp4" && echo "✓ File exists" || echo "✗ File missing or empty"
+```
+
+### 2. No corrupt packets
+```bash
+ffmpeg -v error -i "output.mp4" -f null - 2>&1
+# Expected: no output (silence = clean)
+```
+
+### 3. Duration matches expected
+```bash
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+# Check against input duration
+```
+
+### 4. All expected streams present
+```bash
+ffprobe -v error -show_entries stream=index,codec_type,codec_name -of csv "output.mp4"
+# Verify: video + audio (+ subtitles if added)
+```
+
+### 5. Resolution correct
+```bash
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "output.mp4"
+```
+
+### 6. Frame rate correct
+```bash
+ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+```
+
+### 7. File size within target (if applicable)
+```bash
+du -sh "output.mp4"
+```
+
+### 8. Playable (spot check — requires video player)
+```bash
+# macOS
+open "output.mp4"
+# Linux
+mpv "output.mp4" 2>/dev/null || vlc "output.mp4"
+```
+
+### 9. Web MP4: moov atom at front
+```bash
+ffprobe -v quiet -show_entries format_tags=major_brand -of default "output.mp4"
+# Confirm -movflags +faststart was used if needed
+```
+
+### 10. Audio levels acceptable (peak < 0dBFS)
+```bash
+ffmpeg -i "output.mp4" -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
+# max_volume should be ≤ -0.1 dB (not clipping)
+```
+
+## Quality Severity Levels
+
+### 🔴 Critical (must fix before delivery)
+- File is corrupt or zero bytes
+- Missing video or audio streams
+- Duration is wrong (>2s off for short clips, >5s for long)
+- Codec incompatible with target platform
+
+### 🟡 Warning (fix if possible)
+- File size >20% larger than target
+- Audio peaks at 0dBFS (potential clipping)
+- Rotation metadata not handled (phone videos)
+- Missing `-movflags +faststart` for web delivery
+
+### 🟢 Info (acceptable for most use cases)
+- Slight frame rate variation (29.97 vs 30)
+- Minor timestamp gaps in non-broadcast content
+- Using default metadata (no title/artist tags)
