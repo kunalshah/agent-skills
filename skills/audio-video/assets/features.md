@@ -199,6 +199,49 @@ Stabilize shaky footage from handheld cameras, drones, or action cameras. Uses a
 
 **Supports:** macOS, Linux, Windows (requires ffmpeg built with `--enable-libvidstab`)
 
+**The Problem Solved in this section M:**
+
+Handheld cameras, drones, action cameras, and phone footage often has unwanted shake — small jitters, rolling motion, or larger bumps.
+Normally you'd fix this with a physical gimbal during shooting, but that's not always possible. Section M lets you stabilize in post,
+after the fact, on any existing footage.
+
+How the Two-Pass Approach Works
+
+Pass 1 — Analysis (`vidstabdetect`):
+FFmpeg reads every frame and tracks how the camera moved between them, writing a transforms file (.trf) to disk. Nothing is output yet
+— this pass is pure analysis. You tune two parameters:
+- `shakiness` (1–10): how much camera movement to expect — higher for drone or action cam footage
+- `accuracy` (1–15): how precisely to track motion — 15 is maximum, recommended for best results
+
+Pass 2 — Correction (`vidstabtransform`):
+FFmpeg reads the original video and the transforms file, then applies the inverse of the detected motion to each frame — effectively
+counteracting the shake. Key parameters:
+- `smoothing`: how many frames to average when computing the correction. Higher = smoother but more aggressive crop.
+- `zoom`: extra zoom-in to hide the black borders that appear at the edges when frames are shifted
+
+An optional `unsharp` filter is added after stabilization to restore sharpness, since the warping process softens the image slightly.
+
+Parameter Tuning by Use Case
+
+┌─────────────────────┬────────────────────────────────────────────┐
+│      Scenario       │                Settings                    │
+├─────────────────────┼────────────────────────────────────────────┤
+│ Mild handheld shake │ `shakiness=3`,` smoothing=10`              │
+├─────────────────────┼────────────────────────────────────────────┤
+│ Typical vlog/event  │ `shakiness=5`, `smoothing=30`              │
+├─────────────────────┼────────────────────────────────────────────┤
+│ Drone / action cam  │ `shakiness=10`, `smoothing=30`, `zoom=2`   │
+├─────────────────────┼────────────────────────────────────────────┤
+│ Preserve full frame │ `zoom=0` (black borders will be visible)   │
+└─────────────────────┴────────────────────────────────────────────┘
+
+The `unsharp` Step:
+After stabilization the frames are slightly soft because of the sub-pixel warping. The `unsharp=5:5:0.8:3:3:0.4` pass at the end sharpens
+both luma and chroma back up — a small but noticeable improvement in the final output.
+
+In Short, Section M is useful in one clear situation: you have shaky footage and no gimbal was used during shooting. Two ffmpeg commands and a
+transforms file is all it takes — no third-party software, no plugins, no GUI needed.
+
 ---
 
 ## SECTION N — 360° / VR Video
@@ -214,6 +257,45 @@ Handle 360° footage from cameras like GoPro Max, Insta360, and Ricoh Theta. Wit
 **Key tools:** `v360` filter (`equirect`, `c3x2`, `flat`)
 
 **Supports:** macOS, Linux, Windows (v360 is cross-platform)
+
+**Example Usa Cases:**
+
+1. Equirectangular ↔ Cubemap Conversion
+
+Convert between the two projection formats using the v360 filter. Useful when:
+- A game engine or VR app requires cubemap input but your camera outputs equirectangular
+- You want to convert cubemap footage for YouTube (which needs equirectangular)
+
+2. Inject Spherical Metadata
+
+Tell platforms the video is 360° by embedding the right metadata tag. YouTube and Facebook read this to activate their 360° viewer.
+Without it, the video plays flat regardless of the projection.
+
+▎ For full YouTube VR compliance, Google's spatial-media tool injects a more complete XMP metadata atom — FFmpeg's injection is a good
+fallback but the spatial-media tool is the authoritative approach for production uploads.
+
+3. Reframe / Extract a Flat View
+
+Take a 360° equirectangular source and extract a conventional flat video from it — choose any yaw (left/right), pitch (up/down), roll,
+and field of view. Useful for:
+- Creating a normal-looking highlight clip from 360° raw footage
+- Reframing a shot in post without reshooting
+- Generating a flat preview thumbnail from a 360° video
+
+**The Problem Solved in this section N:**
+A 360° camera doesn't record a normal flat image — it records the entire sphere around it and maps that onto a flat rectangle using a
+mathematical projection. The two most common are:
+
+- Equirectangular — the full sphere stretched into a 2:1 rectangle (looks like a distorted world map). This is what YouTube VR,
+Facebook 360, and most VR headsets expect.
+- Cubemap (3×2) — the sphere mapped onto the 6 faces of a cube, arranged in a grid. Some cameras and engines use this natively.
+
+If you upload an equirectangular video to YouTube without the right spherical metadata injected, YouTube just plays it as a flat
+distorted video — it never activates the 360° viewer.
+
+In Short, Section N matters in three situations: your 360° upload isn't activating the VR viewer on YouTube or Facebook (metadata injection),
+you need to convert between projection formats for a specific platform or engine (v360 conversion), and you want to extract a usable
+flat clip from 360° raw footage (reframing).
 
 ---
 
@@ -231,6 +313,52 @@ Modern phones and cameras shoot HDR by default (10-bit, bt2020, smpte2084). With
 
 **Supports:** macOS, Linux, Windows (requires ffmpeg with `--enable-libzimg`)
 
+**Example Usa Cases:**
+
+1. HDR10 → SDR Tone Mapping
+
+The full conversion pipeline for genuine HDR10 content: linearize the signal, convert to a working color space, apply a tone mapping
+curve to compress highlights into the SDR range, then output as standard bt709. Four tone mapping algorithms are available:
+
+┌───────────┬──────────────────────────────────────────────────────┐
+│ Algorithm │                      Character                       │
+├───────────┼──────────────────────────────────────────────────────┤
+│ hable     │ Filmic, preserves highlight detail — general purpose │
+├───────────┼──────────────────────────────────────────────────────┤
+│ reinhard  │ Simple global compression — fast previews            │
+├───────────┼──────────────────────────────────────────────────────┤
+│ mobius    │ Smooth and natural — good for skin tones             │
+├───────────┼──────────────────────────────────────────────────────┤
+│ clip      │ Hard cut at white — technical/broadcast use          │
+└───────────┴──────────────────────────────────────────────────────┘
+
+2. Colorspace Conversion (bt2020 → bt709)
+
+Some files are tagged as bt2020 but aren't true HDR — just wide gamut SDR. A lighter conversion using the colorspace filter handles
+these without the full HDR tone mapping pipeline.
+
+3. Encode HDR10 Output
+
+For archival or delivering to HDR-capable platforms, encode proper HDR10 with full display metadata — master display luminance,
+MaxCLL, MaxFALL — using libx265. This is what makes the file play correctly on an HDR TV or pass Netflix/Apple HDR validation.
+
+4. Tag Existing Files
+
+Sometimes footage is encoded correctly but missing the color space tags, so players treat it as SDR. You can inject the correct
+color_primaries, color_trc, and colorspace flags without re-encoding — stream copy with metadata only.
+
+**The Problem Solved in this section O:**
+iPhones, Android flagships, and most modern cameras now shoot HDR by default — 10-bit color, wide color gamut (bt2020), PQ transfer
+curve (smpte2084). When that footage lands on an SDR platform, an SDR editing timeline, or an SDR display without proper conversion,
+one of two things happens:
+- Colors look washed out and flat (if the player tries to interpret HDR as SDR naively)
+- Colors look blown out and oversaturated (if the wide gamut isn't mapped down)
+
+This Section O fixes both.
+
+In Short, Section O matters most in three situations: footage from a modern phone looks wrong after export (colorspace conversion), delivering
+SDR versions of HDR masters for web (tone mapping), and archiving or delivering to HDR platforms (HDR10 encode with proper metadata).
+
 ---
 
 ## SECTION P — Advanced Streaming
@@ -245,6 +373,27 @@ Three distinct streaming capabilities beyond basic RTMP: low-latency SRT, multi-
 **Key tools:** `srt://` protocol, `-f tee`, `-f segment`, `-segment_time`, `-segment_wrap`, `-reset_timestamps`
 
 **Supports:** macOS, Linux, Windows (SRT requires ffmpeg with `--enable-libsrt`, included in full builds)
+
+**Example Usa Cases:**
+
+1. SRT (Secure Reliable Transport)
+
+Low-latency streaming protocol that actively compensates for packet loss and network jitter. Unlike RTMP which just drops frames on a
+bad connection, SRT retransmits lost packets. Useful when streaming over unstable networks — cellular hotspots, satellite uplinks, or
+long-distance contribution feeds (e.g. a remote reporter sending footage back to a studio).
+
+2. Multi-endpoint Restreaming (tee muxer)
+
+One ffmpeg command, one encoder, multiple destinations simultaneously. You can stream to YouTube + Twitch + Facebook at the same time
+without running three separate encoder instances or paying for a restreaming service like Restream.io.
+
+3. Rolling Window DVR
+
+Continuous loop recording that writes segments to disk and automatically overwrites the oldest ones, keeping only the last N minutes.
+You get a perpetual recording without ever filling up storage. Practical for:
+- Security cameras (keep last 2 hours, discard older)
+- Broadcast monitoring (capture a rolling window in case something needs to be reviewed)
+- Game capture (record always-on, clip what you need later)
 
 ---
 
@@ -263,6 +412,43 @@ Real-world files get corrupted — interrupted recordings, SD card failures, bad
 **Key tools:** `-err_detect ignore_err`, `-fflags +discardcorrupt`, `-analyzeduration 100M`, `-vsync cfr`, `-itsoffset`, `-movflags +faststart`
 
 **Supports:** macOS, Linux, Windows
+
+**Example Usa Cases:**
+
+1. Corrupt / Truncated File Recovery
+
+When a recording is interrupted — power cut, SD card yanked, app crash, bad download — the resulting file often won't open at all in
+media players or editors. FFmpeg can attempt recovery by ignoring errors and discarding only the damaged packets, extracting as much
+usable footage as possible from what remains.
+
+Three escalating approaches:
+- -err_detect ignore_err -fflags +discardcorrupt — ignore bad packets, keep the rest
+- -analyzeduration 100M -probesize 100M — for files where the header/index is damaged
+- -f mp4 (force container) — for files where FFmpeg can't even detect the format
+
+2. VFR → CFR Conversion
+
+This is one of the most common silent problems in video editing. Phones and screen recorders (OBS, Loom, QuickTime screen capture)
+record in variable frame rate — the timestamp between frames isn't constant. Most editing software (Premiere Pro, DaVinci Resolve,
+Final Cut) assumes constant frame rate internally, so VFR footage causes audio sync drift that gets worse over time — a 10-minute clip
+might be half a second out of sync by the end.
+
+Converting to CFR (-vsync cfr -r 30) before importing into your editor fixes this at the source. FFprobe can confirm whether a file is
+VFR before you convert.
+
+3. Audio/Video Sync Offset Fix
+
+When audio and video are consistently offset by a known amount (e.g. a microphone that always introduces 200ms of delay), you can
+correct it without re-encoding the video — just shift the audio stream. Works in both directions: delay or advance.
+
+4. Rebuild Broken MP4 Index
+
+The moov atom is the index at the start of an MP4 that tells players where everything is. If it's missing or at the wrong position,
+the file won't seek properly or won't play at all in browsers. -movflags +faststart rebuilds and repositions it — fast, lossless, no
+re-encode.
+
+In short, Section Q is most useful in three real-world situations: something went wrong during recording (corrupt file recovery), footage from a
+phone or screen recorder drifts out of sync in your editor (VFR→CFR), and an MP4 won't play in a browser or seek properly (moov atom rebuild).
 
 ---
 
@@ -283,6 +469,47 @@ Media files carry metadata that affects how they are displayed, organized, and d
 
 **Supports:** macOS, Linux, Windows
 
+**Example Usa Cases:**
+
+1. Embed Key/Value Tags
+
+Add standard metadata tags — title, artist, year, album, comment, track number — to any video or audio file. These show up in file
+browsers, media players, and streaming platforms. Essential for podcasts, audiobooks, and music files where the player displays this
+info to the listener.
+
+2. Strip All Metadata (Privacy)
+
+Phones and cameras silently embed a lot of data into every file: GPS coordinates of where it was recorded, device model, serial
+number, sometimes even user account info. Before publishing anything online, stripping this data is a basic privacy practice. One
+ffmpeg flag (-map_metadata -1) removes everything.
+
+3. Chapter Markers
+
+Embed navigable chapter points with timestamps and titles directly into the file. YouTube automatically reads these and renders a
+chapter timeline in the progress bar. VLC, QuickTime, and most media players also display them. Particularly valuable for:
+- Long YouTube videos (tutorials, podcasts, lectures)
+- Audiobooks (chapter navigation in every player)
+- Training videos (jump to specific topics)
+
+4. Cover Art
+
+Embed a thumbnail image directly into MP3, M4A, or AAC files. Without this, every podcast app, music player, and audiobook app shows a
+blank grey square. The cover travels with the file regardless of where it's played.
+
+5. Multi-Language Track Management
+
+Tag audio and subtitle streams with ISO language codes so players automatically select the right track based on the viewer's system
+language. Also covers removing unwanted tracks (e.g. stripping a commentary audio track before delivery) and extracting specific
+language tracks.
+
+6. Read All Metadata
+
+Dump everything embedded in a file — format tags, per-stream tags, chapter info — parsed from ffprobe's JSON output via Python. Useful
+for auditing files before delivery.
+
+In short, Section R matters most in three scenarios: privacy (strip before publishing), distribution (chapters + language tags for international content), 
+and audio files (cover art + tags for podcasts/audiobooks).
+
 ---
 
 ## SECTION S — Testing & Debugging
@@ -299,3 +526,42 @@ Verify encoding pipelines, diagnose file-level problems, and benchmark your hard
 **Key tools:** `smptebars`, `smptehdbars`, `sine` lavfi sources, `ffprobe -show_packets`, `-bsf:v trace_headers`, `-benchmark`, Python 3 benchmark script
 
 **Supports:** macOS, Linux, Windows (Python 3 required for benchmark script)
+
+**Example Usa Cases:**
+
+1. SMPTE Color Bars + Tone
+
+Generate the broadcast-standard calibration signal — color bars on screen, 1kHz sine tone on audio. Use this to verify your entire
+encoding pipeline is working correctly before a live broadcast or before delivering a file to a client. If the bars look right and the
+tone is at the correct level, your codec, color space, and audio settings are all good.
+
+2. Packet-Level Analysis
+
+When a file causes playback issues or crashes an editor, ffprobe -show_packets lets you go below the container level and inspect every
+individual packet. You can find:
+- Exactly where corruption starts in a file
+- Where keyframes are missing (causing seek failures)
+- PTS/DTS gaps that cause A/V desync
+- Total packet count and duration span
+
+The included Python script summarizes this into a readable report automatically.
+
+3. Encoding Benchmark
+
+Before committing to a 6-hour batch encode, run a quick benchmark to understand the tradeoff between preset speed, output file size,
+and quality on your specific hardware. The Python script tests ultrafast through slow presets and prints a table showing encode time
+and file size for each — so you can make an informed decision.
+
+4. Bit Stream Inspection
+
+Dump raw H.264 NAL units and codec headers using the trace_headers bitstream filter. This is for diagnosing encoder-level issues that
+don't surface at the container level — things like missing SPS/PPS headers, wrong profile/level flags, or reference frame issues that
+cause decoder failures on specific devices.
+
+5. Streamability Check
+
+Verify that an MP4's moov atom is at the front of the file (required for progressive web playback) and inspect file structure with
+ffprobe.
+
+In short, Section S is most useful when something is broken and you need to diagnose it, or when you're setting up a new encoding pipeline and
+want to validate it before going live.

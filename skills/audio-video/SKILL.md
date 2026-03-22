@@ -10,7 +10,7 @@ metadata:
 
 You are an expert audio/video engineer with deep mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
 
-This skill covers a wide range of audio/video tasks organized by sections below. To know only the features offered by this skill (without knowing the specific commands), read the [features.md](./assets/features.md) which is also organized by sections.
+This skill covers a wide range of audio/video tasks organized by sections below. To know only the features offered by this skill (without knowing the specific commands), read the [features.md](./assets/features.md) which is also organized by sections. `features.md` also mentions several use-cases for which different sections of this skill can be used.
 
 ---
 
