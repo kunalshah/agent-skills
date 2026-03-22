@@ -17,6 +17,18 @@ Convert and transcode between any video format or codec. Handles the full range 
 
 **Key tools:** `libx264`, `libx265`, `libaom-av1`, `libvpx-vp9`, `h264_videotoolbox`, `h264_nvenc`, `-c copy`, `-crf`, `-preset`, `-movflags +faststart`
 
+**Example Use Cases:**
+
+1. **Uploading to a platform that only accepts MP4/H.264** — Transcode any source (MKV, MOV, AVI, HEVC) to a universally compatible H.264 MP4 with one command.
+
+2. **Archiving at smaller file sizes** — Re-encode old H.264 files to H.265 or AV1 to cut file size by 40–60% at the same visual quality. Useful for long-term storage where disk space matters.
+
+3. **Changing containers without re-encoding** — Remux MKV to MP4 (or vice versa) in seconds via stream copy. No quality loss, no waiting — just restructures the container around the existing streams.
+
+4. **Creating a video from a photo sequence** — Convert a timelapse or animation render (PNG sequence) into a video file, controlling the output fps independently of the input frame count.
+
+5. **Extracting frames for machine learning or review** — Pull every frame, every Nth frame, or only keyframes from a video as individual images for dataset building or manual review.
+
 ---
 
 ## SECTION B — Audio Processing
@@ -31,6 +43,18 @@ Extract, convert, filter, and analyze audio from any media file. Covers everythi
 - Advanced: remove silence, change speed with pitch preservation (0.5–2.0×), pitch shift without tempo change, generate waveform stats, generate spectrogram PNG
 
 **Key tools:** `libmp3lame`, `loudnorm`, `highpass`, `lowpass`, `anlmdn`, `acompressor`, `afade`, `silenceremove`, `atempo`, `showspectrumpic`
+
+**Example Use Cases:**
+
+1. **Extracting audio from a video for a podcast or music release** — Pull the audio track from any video as MP3, AAC, FLAC, or WAV without touching the video stream.
+
+2. **Normalizing loudness before publishing a podcast** — Apply EBU R128 two-pass normalization so every episode hits the same loudness target (-16 LUFS for Apple Podcasts, -14 LUFS for Spotify) regardless of how it was recorded.
+
+3. **Cleaning up a noisy recording** — Chain high-pass (remove low rumble/hum), `anlmdn` noise reduction, and dynamic range compression to make a poor-quality microphone recording more listenable.
+
+4. **Speeding up an audiobook or lecture** — Use `atempo` to play back at 1.5× or 2× speed with pitch preserved, producing a natural-sounding faster version rather than a chipmunk effect.
+
+5. **Generating a spectrogram for audio QA** — Visualize the frequency content of an audio file as a PNG to spot noise floors, clipping, or encoding artifacts before delivery.
 
 ---
 
@@ -50,6 +74,20 @@ The full editing toolkit: cut, join, resize, rotate, crop, overlay, and color gr
 
 **Key tools:** `fps`, `minterpolate`, `transpose`, `vflip`, `hflip`, `crop`, `cropdetect`, `overlay`, `drawtext`, `eq`, `lut3d`, `curves`, `hue`, `scale`, `filter_complex`
 
+**Example Use Cases:**
+
+1. **Trimming a highlight clip from a long recording** — Cut a specific segment from a 2-hour recording in seconds using stream copy (no re-encode, instant output). Use frame-accurate trim when you need to cut on an exact frame rather than the nearest keyframe.
+
+2. **Joining multiple recordings into one file** — Concatenate episodes, segments, or daily recordings into a single file. Same-codec files join without re-encoding; mixed sources are handled with automatic re-encode.
+
+3. **Resizing for a specific platform** — Scale a 4K master down to 1080p, 720p, or any platform target while automatically preserving the aspect ratio and padding with black bars if needed.
+
+4. **Fixing a video shot in portrait mode on a phone** — Auto-rotate using the metadata flag (`-metadata:s:v rotate=0`) or transpose filter to correct sideways or upside-down footage.
+
+5. **Adding a branded watermark to every video** — Overlay a logo PNG at a fixed position with configurable opacity. Apply to a single file or use with batch processing (Section I) to brand an entire library.
+
+6. **Color grading with a LUT** — Apply a `.cube` LUT from any color grading tool (DaVinci Resolve, Lightroom exports, free LUT packs) to give footage a consistent look without a GUI editor.
+
 ---
 
 ## SECTION D — Subtitles & Captions
@@ -64,6 +102,16 @@ Add, remove, convert, and embed subtitle tracks in any format.
 - Tag subtitle tracks with language metadata
 
 **Key tools:** `subtitles` filter, `mov_text`, `-c:s`, `-metadata:s:s:0 language=`
+
+**Example Use Cases:**
+
+1. **Burning subtitles for social media** — Hard-burn SRT or ASS subtitles into the video so they always show regardless of player or platform — essential for silent autoplay on Instagram, TikTok, and LinkedIn.
+
+2. **Adding soft subtitles for a streaming platform** — Embed toggleable subtitle tracks in MKV or MP4 without burning them in, so viewers can turn them on/off. Add multiple language tracks to the same file.
+
+3. **Extracting subtitles from a downloaded MKV** — Pull the subtitle track out as a standalone `.srt` or `.ass` file for editing or translation.
+
+4. **Converting subtitle formats** — Convert SRT to ASS for advanced styling (custom fonts, colors, positioning) or back to SRT for platforms that only accept plain subtitles.
 
 ---
 
@@ -80,6 +128,16 @@ Extract frames and generate thumbnails for any use — preview images, video pla
 
 **Key tools:** `-ss`, `-vframes 1`, `thumbnail` filter, `scale`, `tile`, `fps`
 
+**Example Use Cases:**
+
+1. **Generating a YouTube upload thumbnail** — Extract the best-looking frame from a video automatically, or pull from a specific timestamp, as a high-quality PNG ready for upload.
+
+2. **Building a video preview strip** — Extract one frame every 10 seconds and tile them into a contact sheet. Used by video players and streaming platforms to show a timeline preview when hovering over the progress bar.
+
+3. **Creating a preview image for a web gallery** — Auto-select the highest-quality frame (avoiding black fades and blurry motion) so the thumbnail actually represents the content.
+
+4. **Extracting a still from a specific moment** — Pull a single frame at an exact timestamp for use in documentation, blog posts, or as a reference image.
+
 ---
 
 ## SECTION F — Streaming & Adaptive Bitrate
@@ -92,6 +150,16 @@ Produce industry-standard streaming outputs — HLS, DASH, and live RTMP — fro
 - **RTMP live streaming:** Stream to Twitch, YouTube, or any RTMP endpoint; screen capture to RTMP
 
 **Key tools:** `-hls_time`, `-hls_playlist_type`, `-hls_segment_filename`, `-var_stream_map`, `-master_pl_name`, `-f dash`, `-seg_duration`, `-f flv`, `-re`, `-g`
+
+**Example Use Cases:**
+
+1. **Self-hosting video on your own server** — Generate HLS segments and a `.m3u8` playlist so any browser can stream your video natively via `<video>` without a CDN or third-party video host.
+
+2. **Multi-bitrate adaptive streaming** — Produce an ABR ladder (1080p, 720p, 480p) with a master playlist so the player automatically switches quality based on the viewer's connection speed — the same approach used by Netflix and YouTube.
+
+3. **Going live to Twitch or YouTube** — Stream a local video file or screen capture directly to any RTMP endpoint with a single ffmpeg command — no OBS required for simple use cases.
+
+4. **DASH delivery for cross-platform compatibility** — Generate an MPEG-DASH `.mpd` manifest for platforms or players that prefer DASH over HLS (common in Android and browser-based players).
 
 ---
 
@@ -106,6 +174,16 @@ Record your screen and webcam natively on every platform — no third-party tool
 
 **Key tools:** `-f avfoundation`, `-f x11grab`, `-f pipewire`, `-f gdigrab`, `-f v4l2`, `-f dshow`
 
+**Example Use Cases:**
+
+1. **Recording a screen tutorial without installing software** — Capture your screen with system audio directly via ffmpeg on any platform. No OBS, Loom, or QuickTime required.
+
+2. **Capturing webcam footage for a talking-head recording** — Record directly from a webcam at a specific resolution and framerate, with audio, into any output format.
+
+3. **CI/CD pipeline screen capture** — Automate screen recording in a headless Linux environment (x11grab) for visual regression testing or demo generation.
+
+4. **Discovering available input devices** — List all cameras and audio inputs on the system before writing a capture command, so you know the exact device name to use.
+
 ---
 
 ## SECTION H — GIF & Animated Images
@@ -118,6 +196,14 @@ Convert video to high-quality animated GIFs and WebP. FFmpeg's two-pass palette 
 - WebP animation with custom fps and resolution
 
 **Key tools:** `palettegen`, `paletteuse`, `dither` modes, `-loop 0`, `-fps_mode passthrough`
+
+**Example Use Cases:**
+
+1. **Creating a GIF for a README or documentation** — Convert a short screen recording or demo clip into a looping GIF. FFmpeg's two-pass palette approach produces GIFs that are dramatically sharper and smaller than tools like Giphy or ezgif.
+
+2. **Converting a GIF to a proper video for social media** — Platforms like Twitter and Slack auto-convert GIFs to video internally anyway — convert to MP4 or WebM first for better quality and smaller file size.
+
+3. **Generating an animated WebP for web use** — Produce an animated WebP (smaller than GIF, supports alpha channel) for modern browsers where GIF bandwidth cost is a concern.
 
 ---
 
@@ -132,6 +218,16 @@ Process entire directories of files automatically. Supports both shell scripting
 - Two-pass encoding for precise target bitrate control
 
 **Key tools:** `-progress pipe:1`, `-nostats`, ffprobe duration extraction, `-pass 1`/`-pass 2`, GNU `parallel`
+
+**Example Use Cases:**
+
+1. **Converting an entire media library overnight** — Loop over hundreds of files and transcode them all to a new format (e.g. H.264 → H.265) unattended. On Linux/macOS use a bash loop; on Windows use a PowerShell loop.
+
+2. **Saturating a multi-core machine for faster throughput** — Use GNU parallel to run 4–8 ffmpeg jobs simultaneously, one per CPU core, instead of encoding files one at a time.
+
+3. **Monitoring progress on a long encode** — Use `-progress pipe:1` with ffprobe to calculate and display a real-time percentage so you know how much time remains on a large batch job.
+
+4. **Hitting an exact target file size** — Use two-pass encoding when you need output to fit under a specific size (e.g. email attachments, upload limits) — pass 1 analyzes, pass 2 hits the bitrate precisely.
 
 ---
 
@@ -150,6 +246,18 @@ Complex multi-input filter chains that go beyond single-stream processing.
 
 **Key tools:** `hstack`, `vstack`, `zoompan`, `vignette`, `boxblur`, `overlay`, `-filter_complex`, `-itsoffset`
 
+**Example Use Cases:**
+
+1. **Side-by-side codec comparison** — Stack the original and re-encoded version horizontally to visually compare quality loss, banding, or blur at different CRF values before committing to a setting.
+
+2. **Creating a highlight reel from multiple cameras** — Stack or grid multiple camera angles into a single frame for a multi-cam overview layout (interviews, sports, events).
+
+3. **Adding a cinematic Ken Burns effect to a still image** — Animate a photo with a slow zoom and pan using `zoompan` to create a moving video from a static image — common in documentary and slideshow production.
+
+4. **Blurring a face or license plate** — Apply a selective region blur using an `overlay` with a `boxblur` limited to specific coordinates, for privacy compliance before publishing footage.
+
+5. **Creating a vignette for a cinematic look** — Add a soft darkened border around the frame to draw attention to the center and give footage a film-like aesthetic.
+
 ---
 
 ## SECTION K — Quality Analysis & Verification
@@ -164,6 +272,16 @@ Measure perceptual and mathematical video quality, and validate that output file
 - Detect corrupt packets in any file
 
 **Key tools:** `psnr`, `ssim`, `libvmaf`, `-f null`, ffprobe stream inspection
+
+**Example Use Cases:**
+
+1. **Choosing the right CRF before a large encode** — Run VMAF on a short sample encoded at different CRF values (e.g. 18, 23, 28) to find the lowest bitrate that still looks good to the human eye — saving hours of re-encoding later.
+
+2. **Validating a transcoded file before delivery** — Verify the output has the expected duration, resolution, frame rate, bitrate, and stream count before sending to a client or publishing. Catch problems before they become complaints.
+
+3. **Comparing two encoding pipelines objectively** — Use SSIM or PSNR to numerically compare the output of two different encoders or settings, rather than relying on subjective eyeballing.
+
+4. **Detecting corruption before archiving** — Run ffmpeg's error detection on a file to confirm it has no corrupt packets before committing it to long-term storage.
 
 ---
 
@@ -182,6 +300,18 @@ Ready-to-use ffmpeg commands tuned to the exact specs each platform requires. No
 | Web/HTML5 | Web MP4 (H.264 faststart), Web WebM (VP9), Optimized GIF |
 | Messaging | Discord (≤8MB), WhatsApp (≤16MB / ≤3min) |
 | Audio | Podcast MP3 (stereo 192kbps), Audiobook (mono, loudness-normalized) |
+
+**Example Use Cases:**
+
+1. **Uploading to YouTube without rejection** — Use the YouTube preset to hit the exact specs YouTube recommends (H.264, CRF 18, 48kHz AAC, 29.97fps) so the platform doesn't re-encode your video and degrade quality.
+
+2. **Preparing a vertical video for TikTok or Instagram Reels** — The preset automatically pads landscape footage to 9:16 with black bars and enforces the platform's max duration and bitrate limits.
+
+3. **Exporting for a video editor's ingest format** — Use the ProRes 422 HQ or DNxHD preset to produce an editing-ready master that any NLE (Premiere, Final Cut, Resolve) will accept without transcoding on import.
+
+4. **Compressing a clip to fit Discord's 8MB limit** — The Discord preset uses two-pass encoding to calculate the exact bitrate needed to hit under 8MB for the given duration, without guessing.
+
+5. **Archiving footage in a lossless format** — Use the FFV1+FLAC/MKV archival preset to store footage with zero quality loss and full bit-for-bit reproducibility, suitable for long-term institutional archives.
 
 ---
 
