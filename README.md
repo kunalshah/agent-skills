@@ -2,12 +2,13 @@
 
 This repository contains skills you can install and use with coding agents like Claude Code, VS Code, OpenCode, Cursor etc.
 
+This repository has one skill: `audio-video`.
+
 ## Important:
 
-All skills in this repository are huge.
-In your coding agent, ensure `context-mode` MCP is already installed before using these skills. `context-mode` has excellent performance in saving tokens. See: https://github.com/mksglu/context-mode
+`audio-video` skill in this repository is quite comprehensive with many features. Thus, the size of the SKILL.md is huge.
 
-These repository has one skill named `audio-video`.
+In your coding agent, ensure `context-mode` MCP is already installed before using this skills. `context-mode` saves your tokens by a huge margin. See: https://github.com/mksglu/context-mode
 
 ## audio-video
 
@@ -19,12 +20,6 @@ Comprehensive audio/video processing skill powered by `ffmpeg` and `ffprobe`. Ha
 
 ```bash
 brew install ffmpeg-full jq
-```
-
-OR
-
-```bash
-brew install ffmpeg jq
 ```
 
 #### Linux
@@ -81,3 +76,7 @@ npx skills add https://github.com/kunalshah/agent-skills --skill audio-video
 After installing, you can use the skill by mentioning it.
 
 For example: `Use the audio-video skill to compress this video for web.`
+
+### audio-video skill features
+
+See [here](./skills/audio-video/assets/features.md).
