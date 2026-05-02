@@ -1124,26 +1124,12 @@ After generating any command, always:
 
 ---
 
-## Common Error Diagnosis
-
-| Error | Likely Cause | Fix |
-|-------|-------------|-----|
-| `Encoder not found` | Codec not compiled into ffmpeg | Install full ffmpeg build |
-| `Invalid option -crf` | Using `-crf` with copy or incompatible codec | Remove `-crf`, use `-b:v` |
-| `moov atom not found` | Corrupt/truncated input | Use `-analyzeduration 100M -probesize 100M` |
-| `No audio/video stream` | Wrong `-map` or stream missing | Check streams with `ffprobe`, fix `-map` |
-| `Output file is empty` | Missing output path or filter error | Check filtergraph syntax, verify paths |
-| `Trailing option(s) found` | Flag order wrong | Move input flags before `-i` |
-| `Unable to find a suitable output format` | Missing output extension | Add correct extension to output file |
-| `Conversion failed!` | See preceding error lines | Run with `-loglevel debug` for full trace |
-
----
-
 ## References
 
 - `references/ffprobe-analysis.md` — Complete ffprobe query patterns and JSON parsing
 - `references/codecs-containers.md` — Codec compatibility matrix and container guide
 - `references/ffmpeg-flags.md` — Complete flag reference with defaults and ranges
+- `references/error-diagnosis.md` - Common ffmpeg and ffprobe errors diagnosis
 - `assets/platform-presets.md` — Ready-to-use presets for 20+ platforms
 - `assets/quality-checklist.md` — Pre-release quality verification checklist
 - `assets/features.md` — Feature overview and capability descriptions

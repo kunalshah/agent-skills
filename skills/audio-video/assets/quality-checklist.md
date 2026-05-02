@@ -14,65 +14,65 @@ Use this checklist before delivering any encoded file. Run each verification com
 
 ### 1. File exists and is non-zero
 ```sh
-ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 file.mp4
 # Prints file size in bytes; errors if file is missing or empty
 ```
 
 ### 2. No corrupt packets
 ```sh
-ffmpeg -v error -i "output.mp4" -f null - 2>&1
+ffmpeg -v error -i file.mp4 -f null - 2>&1
 # Expected: no output (silence = clean)
 # Note: 2>&1 works on macOS/Linux. On Windows PowerShell use: ffmpeg ... 2>&1 (same syntax in PS); on cmd.exe: 2>&1
 ```
 
 ### 3. Duration matches expected
 ```sh
-ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 file.mp4
 # Check against input duration
 ```
 
 ### 4. All expected streams present
 ```sh
-ffprobe -v error -show_entries stream=index,codec_type,codec_name -of csv "output.mp4"
+ffprobe -v error -show_entries stream=index,codec_type,codec_name -of csv file.mp4
 # Verify: video + audio (+ subtitles if added)
 ```
 
 ### 5. Resolution correct
 ```sh
-ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "output.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 file.mp4
 ```
 
 ### 6. Frame rate correct
 ```sh
-ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 file.mp4
 ```
 
 ### 7. File size within target (if applicable)
 ```sh
-ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
+ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 file.mp4
 # Prints size in bytes
 ```
 
 ### 8. Playable (spot check — requires video player)
 ```sh
 # macOS
-open "output.mp4"
+open "file.mp4"
 # Linux
-mpv "output.mp4" 2>/dev/null || vlc "output.mp4"
+mpv "file.mp4" 2>/dev/null || vlc "file.mp4"
 # Note: 2>/dev/null is Linux/macOS only; on Windows omit it or use 2>NUL
 # Windows
-start "output.mp4"
+start "file.mp4"
 ```
 
 ### 9. Web MP4: moov atom at front
 ```sh
-ffprobe -v quiet -show_entries format_tags=major_brand -of default "output.mp4"
+ffprobe -v quiet -show_entries format_tags=major_brand -of default file.mp4
 # Confirm -movflags +faststart was used if needed
 ```
 
 ### 10. Audio levels acceptable (peak < 0dBFS)
 ```sh
-ffmpeg -i "output.mp4" -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
+ffmpeg -i file.mp4 -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
 # max_volume should be ≤ -0.1 dB (not clipping)
 # Note: grep is not available on Windows — use PowerShell: ffmpeg ... 2>&1 | Select-String "mean_volume|max_volume"
 ```
