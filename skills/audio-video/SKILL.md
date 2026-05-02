@@ -40,9 +40,7 @@ Always inspect input files before building commands. Load `references/ffprobe-an
 ffprobe -v quiet -print_format json -show_format -show_streams "input.mp4"
 
 # Human-readable summary
-ffprobe -v error -show_entries format=filename,duration,size,bit_rate \
-  -show_entries stream=index,codec_name,codec_type,width,height,r_frame_rate,bit_rate,sample_rate,channels \
-  -of default=noprint_wrappers=1 "input.mp4"
+ffprobe -v error -show_entries format=filename,duration,size,bit_rate -show_entries stream=index,codec_name,codec_type,width,height,r_frame_rate,bit_rate,sample_rate,channels -of default=noprint_wrappers=1 "input.mp4"
 
 # Human-readable full metadata summary
 ffprobe -v quiet -print_format json -show_format -show_streams "input.mp4" | python3 -m json.tool
@@ -92,63 +90,39 @@ Load `references/codecs-containers.md` for codec compatibility matrix.
 
 #### MP4 → High-quality H.264 (universal compatibility)
 ```sh
-ffmpeg -i "input.mov" \
-  -c:v libx264 -crf 23 -preset slow \
-  -c:a aac -b:a 192k \
-  -movflags +faststart \
-  "output.mp4"
+ffmpeg -i "input.mov" -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 192k -movflags +faststart "output.mp4"
 ```
 > `crf 18-28`: lower = better quality/larger file. `preset`: ultrafast→veryslow (speed vs compression).
 
 #### H.265/HEVC (better compression, modern devices)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libx265 -crf 28 -preset slow \
-  -c:a aac -b:a 128k \
-  -tag:v hvc1 \
-  "output_h265.mp4"
+ffmpeg -i "input.mp4" -c:v libx265 -crf 28 -preset slow -c:a aac -b:a 128k -tag:v hvc1 "output_h265.mp4"
 ```
 > `-tag:v hvc1` required for Apple device compatibility.
 
 #### AV1 (best compression, slowest encode)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libaom-av1 -crf 30 -b:v 0 \
-  -strict experimental \
-  -c:a libopus -b:a 128k \
-  "output.webm"
+ffmpeg -i "input.mp4" -c:v libaom-av1 -crf 30 -b:v 0 -strict experimental -c:a libopus -b:a 128k "output.webm"
 ```
 
 #### VP9 / WebM (web-optimized, royalty-free)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libvpx-vp9 -crf 30 -b:v 0 \
-  -c:a libopus -b:a 128k \
-  "output.webm"
+ffmpeg -i "input.mp4" -c:v libvpx-vp9 -crf 30 -b:v 0 -c:a libopus -b:a 128k "output.webm"
 ```
 
 #### Hardware-accelerated encoding (macOS VideoToolbox)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v h264_videotoolbox -b:v 5M \
-  -c:a aac -b:a 192k \
-  "output_fast.mp4"
+ffmpeg -i "input.mp4" -c:v h264_videotoolbox -b:v 5M -c:a aac -b:a 192k "output_fast.mp4"
 ```
 
 #### Hardware-accelerated encoding (NVIDIA NVENC)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v h264_nvenc -preset p6 -cq 23 \
-  -c:a aac -b:a 192k \
-  "output_nvenc.mp4"
+ffmpeg -i "input.mp4" -c:v h264_nvenc -preset p6 -cq 23 -c:a aac -b:a 192k "output_nvenc.mp4"
 ```
 
 #### Hardware-accelerated encoding (Intel QSV)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v h264_qsv -global_quality 23 \
-  -c:a aac -b:a 192k \
-  "output_qsv.mp4"
+ffmpeg -i "input.mp4" -c:v h264_qsv -global_quality 23 -c:a aac -b:a 192k "output_qsv.mp4"
 ```
 
 ### A2. Container Remuxing (No Re-encoding)
@@ -166,15 +140,10 @@ ffmpeg -i "input.mov" -c copy -movflags +faststart "output.mp4"
 ### A3. Image Sequence → Video
 ```sh
 # PNG sequence at 24fps
-ffmpeg -framerate 24 -i "frame_%04d.png" \
-  -c:v libx264 -crf 18 -pix_fmt yuv420p \
-  "output.mp4"
+ffmpeg -framerate 24 -i "frame_%04d.png" -c:v libx264 -crf 18 -pix_fmt yuv420p "output.mp4"
 
 # With audio
-ffmpeg -framerate 24 -i "frame_%04d.png" -i "audio.wav" \
-  -c:v libx264 -crf 18 -pix_fmt yuv420p \
-  -c:a aac -b:a 192k \
-  -shortest "output.mp4"
+ffmpeg -framerate 24 -i "frame_%04d.png" -i "audio.wav" -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "output.mp4"
 ```
 
 ### A4. Video → Image Sequence
@@ -232,15 +201,11 @@ ffmpeg -i "input_48k.wav" -ar 44100 "output_44k.wav"
 ```sh
 # Two-pass loudnorm (broadcast standard, recommended)
 # Pass 1: Measure
-ffmpeg -i "input.mp3" \
-  -af loudnorm=I=-23:TP=-1.5:LRA=11:print_format=json \
-  -f null - 2>&1 | tail -n 20
+ffmpeg -i "input.mp3" -af loudnorm=I=-23:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | tail -n 20
 # Note: tail -n 20 is required (not tail -20); tail is not available on Windows (use PowerShell: ... | Select-Object -Last 20)
 
 # Pass 2: Apply measured values (replace measured_* with Pass 1 output)
-ffmpeg -i "input.mp3" \
-  -af "loudnorm=I=-23:TP=-1.5:LRA=11:measured_I=-18.2:measured_TP=-0.5:measured_LRA=8.3:measured_thresh=-28.5:offset=0.5:linear=true" \
-  "output_normalized.mp3"
+ffmpeg -i "input.mp3" -af "loudnorm=I=-23:TP=-1.5:LRA=11:measured_I=-18.2:measured_TP=-0.5:measured_LRA=8.3:measured_thresh=-28.5:offset=0.5:linear=true" "output_normalized.mp3"
 ```
 
 ### B4. Audio Filters
@@ -258,17 +223,13 @@ ffmpeg -i "input.mp3" -af "lowpass=f=8000" "output.mp3"
 ffmpeg -i "input.wav" -af "anlmdn=s=7:p=0.002:r=0.002:m=15" "output.wav"
 
 # Dynamic range compression
-ffmpeg -i "input.mp3" \
-  -af "acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2dB" \
-  "output_compressed.mp3"
+ffmpeg -i "input.mp3" -af "acompressor=threshold=-20dB:ratio=4:attack=5:release=50:makeup=2dB" "output_compressed.mp3"
 
 # Stereo to mono
 ffmpeg -i "input_stereo.mp3" -ac 1 "output_mono.mp3"
 
 # Audio fade in/out
-ffmpeg -i "input.mp3" \
-  -af "afade=t=in:st=0:d=3,afade=t=out:st=57:d=3" \
-  "output_faded.mp3"
+ffmpeg -i "input.mp3" -af "afade=t=in:st=0:d=3,afade=t=out:st=57:d=3" "output_faded.mp3"
 ```
 
 ### B5. Advanced Audio Processing
@@ -301,18 +262,13 @@ ffmpeg -i "input.wav" -lavfi "showspectrumpic=s=1024x512:mode=combined" -update 
 ffmpeg -ss 00:01:30 -to 00:03:00 -i "input.mp4" -c copy "clip.mp4"
 
 # Frame-accurate trim (re-encodes, precise)
-ffmpeg -i "input.mp4" -ss 00:01:30 -to 00:03:00 \
-  -c:v libx264 -crf 23 -c:a aac \
-  "clip_accurate.mp4"
+ffmpeg -i "input.mp4" -ss 00:01:30 -to 00:03:00 -c:v libx264 -crf 23 -c:a aac "clip_accurate.mp4"
 
 # Cut by duration
 ffmpeg -ss 00:01:30 -t 90 -i "input.mp4" -c copy "clip_90s.mp4"
 
 # Remove a section (e.g., remove 00:10 to 00:20)
-ffmpeg -i "input.mp4" \
-  -vf "select='not(between(t,10,20))',setpts=N/FRAME_RATE/TB" \
-  -af "aselect='not(between(t,10,20))',asetpts=N/SR/TB" \
-  "output_removed_section.mp4"
+ffmpeg -i "input.mp4" -vf "select='not(between(t,10,20))',setpts=N/FRAME_RATE/TB" -af "aselect='not(between(t,10,20))',asetpts=N/SR/TB" "output_removed_section.mp4"
 ```
 
 ### C2. Concatenation
@@ -330,20 +286,13 @@ EOF
 ffmpeg -f concat -safe 0 -i filelist.txt -c copy "output.mp4"
 
 # Concat with re-encode (different codecs/resolutions)
-ffmpeg -i "part1.mp4" -i "part2.mp4" \
-  -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]" \
-  -map "[v]" -map "[a]" \
-  -c:v libx264 -crf 23 -c:a aac \
-  "output.mp4"
+ffmpeg -i "part1.mp4" -i "part2.mp4" -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v libx264 -crf 23 -c:a aac "output.mp4"
 ```
 
 ### C3. Scaling & Resolution
 ```sh
 # Scale to 1920x1080, maintain aspect ratio (pad with black)
-ffmpeg -i "input.mp4" \
-  -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
-  -c:v libx264 -crf 23 -c:a copy \
-  "output_1080p.mp4"
+ffmpeg -i "input.mp4" -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" c:v libx264 -crf 23 -c:a copy "output_1080p.mp4"
 
 # Scale to width 1280, auto height (preserve aspect ratio)
 ffmpeg -i "input.mp4" -vf "scale=1280:-2" -c:v libx264 -crf 23 "output.mp4"
@@ -366,10 +315,7 @@ ffmpeg -i "input.mp4" -vf "scale=-2:480" -c:v libx264 -crf 23 "output_480p.mp4"
 ffmpeg -i "input.mp4" -vf fps=30 -c:v libx264 -crf 23 "output_30fps.mp4"
 
 # Smooth slow-motion via frame interpolation (minterpolate)
-ffmpeg -i "input.mp4" \
-  -vf "minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1" \
-  -c:v libx264 -crf 23 \
-  "output_60fps_smooth.mp4"
+ffmpeg -i "input.mp4" -vf "minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1" -c:v libx264 -crf 23 "output_60fps_smooth.mp4"
 ```
 
 ### C5. Rotation & Flipping
@@ -390,8 +336,7 @@ ffmpeg -i "input.mp4" -vf vflip -c:a copy "output_vflip.mp4"
 # Auto-rotate from metadata (fix phone videos)
 # ffmpeg enables autorotate by default when re-encoding — simply re-encode without -noautorotate
 # Setting rotate=0 in metadata only clears the flag; it does NOT physically rotate the video
-ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -c:a copy \
-  "output_autorotate.mp4"
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -c:a copy "output_autorotate.mp4"
 ```
 
 ### C6. Cropping
@@ -400,9 +345,7 @@ ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -c:a copy \
 ffmpeg -i "input.mp4" -vf "crop=1280:720:100:50" -c:a copy "output_cropped.mp4"
 
 # Crop center 1:1 square
-ffmpeg -i "input.mp4" \
-  -vf "crop=min(iw\,ih):min(iw\,ih):(iw-min(iw\,ih))/2:(ih-min(iw\,ih))/2" \
-  -c:a copy "output_square.mp4"
+ffmpeg -i "input.mp4" -vf "crop=min(iw\,ih):min(iw\,ih):(iw-min(iw\,ih))/2:(ih-min(iw\,ih))/2" -c:a copy "output_square.mp4"
 
 # Auto-detect and remove black bars
 # Note: grep is not available on Windows — use: ffmpeg ... 2>&1 | Select-String crop  (PowerShell)
@@ -414,47 +357,31 @@ ffmpeg -i "input.mp4" -vf "crop=1920:800:0:140" -c:a copy "output_cropped.mp4"
 ### C7. Overlays & Watermarks
 ```sh
 # Add image watermark (bottom-right, 10px margin)
-ffmpeg -i "input.mp4" -i "watermark.png" \
-  -filter_complex "overlay=W-w-10:H-h-10" \
-  -c:a copy "output_watermarked.mp4"
+ffmpeg -i "input.mp4" -i "watermark.png" -filter_complex "overlay=W-w-10:H-h-10" -c:a copy "output_watermarked.mp4"
 
 # Add text watermark
-ffmpeg -i "input.mp4" \
-  -vf "drawtext=text='© 2024 MyBrand':fontcolor=white:fontsize=24:x=10:y=10:alpha=0.8" \
-  -c:a copy "output_text.mp4"
+ffmpeg -i "input.mp4" -vf "drawtext=text='© 2024 MyBrand':fontcolor=white:fontsize=24:x=10:y=10:alpha=0.8" -c:a copy "output_text.mp4"
 
 # Animated overlay with fade
-ffmpeg -i "input.mp4" -i "logo.png" \
-  -filter_complex "overlay=10:10:enable='between(t,2,8)'" \
-  -c:a copy "output_timed_overlay.mp4"
+ffmpeg -i "input.mp4" -i "logo.png" -filter_complex "overlay=10:10:enable='between(t,2,8)'" -c:a copy "output_timed_overlay.mp4"
 
 # Picture-in-Picture (PiP)
-ffmpeg -i "main.mp4" -i "pip.mp4" \
-  -filter_complex "[1:v]scale=320:180[pip];[0:v][pip]overlay=W-w-10:H-h-10" \
-  -c:a copy "output_pip.mp4"
+ffmpeg -i "main.mp4" -i "pip.mp4" -filter_complex "[1:v]scale=320:180[pip];[0:v][pip]overlay=W-w-10:H-h-10" -c:a copy "output_pip.mp4"
 ```
 
 ### C8. Color Correction & Grading
 ```sh
 # Brightness, contrast, saturation
-ffmpeg -i "input.mp4" \
-  -vf "eq=brightness=0.06:contrast=1.2:saturation=1.5:gamma=1.0" \
-  -c:a copy "output_color.mp4"
+ffmpeg -i "input.mp4" -vf "eq=brightness=0.06:contrast=1.2:saturation=1.5:gamma=1.0" c:a copy "output_color.mp4"
 
 # LUT (Look-Up Table) color grading
-ffmpeg -i "input.mp4" \
-  -vf "lut3d=file='film_emulation.cube'" \
-  -c:a copy "output_graded.mp4"
+ffmpeg -i "input.mp4" -vf "lut3d=file='film_emulation.cube'" -c:a copy "output_graded.mp4"
 
 # Curves adjustment (S-curve for punch)
-ffmpeg -i "input.mp4" \
-  -vf "curves=r='0/0 0.5/0.6 1/1':g='0/0 0.5/0.52 1/1':b='0/0 0.5/0.44 1/1'" \
-  -c:a copy "output_curves.mp4"
+ffmpeg -i "input.mp4" -vf "curves=r='0/0 0.5/0.6 1/1':g='0/0 0.5/0.52 1/1':b='0/0 0.5/0.44 1/1'" -c:a copy "output_curves.mp4"
 
 # Hue/saturation shift
-ffmpeg -i "input.mp4" \
-  -vf "hue=h=30:s=1.2" \
-  -c:a copy "output_hue.mp4"
+ffmpeg -i "input.mp4" -vf "hue=h=30:s=1.2" -c:a copy "output_hue.mp4"
 ```
 
 ---
@@ -468,15 +395,10 @@ ffmpeg -i "input.mp4" \
 ffmpeg -i "input.mp4" -vf "subtitles=subs.srt" -c:a copy "output_burned.mp4"
 
 # Add SRT as soft subtitle track (selectable, not burned)
-ffmpeg -i "input.mp4" -i "subs.srt" \
-  -c copy -c:s mov_text \
-  -metadata:s:s:0 language=eng \
-  "output_soft_subs.mp4"
+ffmpeg -i "input.mp4" -i "subs.srt" -c copy -c:s mov_text -metadata:s:s:0 language=eng "output_soft_subs.mp4"
 
 # Add ASS/SSA subtitles to MKV
-ffmpeg -i "input.mkv" -i "subs.ass" \
-  -c copy -c:s copy \
-  "output.mkv"
+ffmpeg -i "input.mkv" -i "subs.ass" -c copy -c:s copy "output.mkv"
 
 # Extract subtitle track
 ffmpeg -i "input.mkv" -map 0:s:0 "subtitles.srt"
@@ -501,10 +423,7 @@ ffmpeg -i "input.mp4" -ss 00:00:05 -vframes 1 -q:v 2 "thumbnail.png"
 ffmpeg -i "input.mp4" -vf "thumbnail,scale=640:-1" -vframes 1 "best_thumb.jpg"
 
 # Sprite sheet / contact sheet (multiple thumbnails in a grid)
-ffmpeg -i "input.mp4" \
-  -vf "fps=1/10,scale=160:90,tile=10x10" \
-  -vframes 1 \
-  "sprite_sheet.jpg"
+ffmpeg -i "input.mp4" -vf "fps=1/10,scale=160:90,tile=10x10" -vframes 1 "sprite_sheet.jpg"
 
 # Thumbnail every 10 seconds
 ffmpeg -i "input.mp4" -vf "fps=1/10,scale=320:-1" "thumbs/thumb_%04d.jpg"
@@ -518,59 +437,26 @@ ffmpeg -i "input.mp4" -vf "fps=1/10,scale=320:-1" "thumbs/thumb_%04d.jpg"
 ### F1. HLS (HTTP Live Streaming)
 ```sh
 # Generate HLS segments with master playlist
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -crf 23 -preset fast \
-  -c:a aac -b:a 128k \
-  -hls_time 6 \
-  -hls_playlist_type vod \
-  -hls_segment_filename "hls/segment_%03d.ts" \
-  "hls/playlist.m3u8"
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 128k -hls_time 6 -hls_playlist_type vod -hls_segment_filename "hls/segment_%03d.ts" "hls/playlist.m3u8"
 
 # Multi-bitrate HLS (ABR ladder)
-ffmpeg -i "input.mp4" \
-  -filter_complex \
-    "[0:v]split=3[v1][v2][v3]; \
-     [v1]scale=-2:1080[v1out]; \
-     [v2]scale=-2:720[v2out]; \
-     [v3]scale=-2:480[v3out]" \
-  -map "[v1out]" -c:v:0 libx264 -b:v:0 5000k \
-  -map "[v2out]" -c:v:1 libx264 -b:v:1 2800k \
-  -map "[v3out]" -c:v:2 libx264 -b:v:2 1400k \
-  -map 0:a -c:a aac -b:a 128k \
-  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2" \
-  -master_pl_name "master.m3u8" \
-  -hls_time 6 -hls_list_size 0 \
-  -hls_segment_filename "hls/%v/segment_%03d.ts" \
-  "hls/%v/playlist.m3u8"
+ffmpeg -i "input.mp4" -filter_complex "[0:v]split=3[v1][v2][v3]; [v1]scale=-2:1080[v1out]; [v2]scale=-2:720[v2out]; [v3]scale=-2:480[v3out]" \
+  -map "[v1out]" -c:v:0 libx264 -b:v:0 5000k -map "[v2out]" -c:v:1 libx264 -b:v:1 2800k -map "[v3out]" -c:v:2 libx264 -b:v:2 1400k -map 0:a -c:a aac -b:a 128k \
+  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2" -master_pl_name "master.m3u8" -hls_time 6 -hls_list_size 0 -hls_segment_filename "hls/%v/segment_%03d.ts" "hls/%v/playlist.m3u8"
 ```
 
 ### F2. DASH (Dynamic Adaptive Streaming over HTTP)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -crf 23 -preset fast \
-  -c:a aac -b:a 128k \
-  -f dash \
-  -seg_duration 4 \
-  -use_template 1 \
-  -use_timeline 1 \
-  "dash/manifest.mpd"
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 128k -f dash -seg_duration 4 -use_template 1 -use_timeline 1 "dash/manifest.mpd"
 ```
 
 ### F3. RTMP Live Streaming
 ```sh
 # Stream to RTMP endpoint (YouTube, Twitch, etc.)
-ffmpeg -re -i "input.mp4" \
-  -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize 9000k \
-  -pix_fmt yuv420p -g 60 \
-  -c:a aac -b:a 160k -ar 44100 \
-  -f flv "rtmp://live.twitch.tv/app/YOUR_STREAM_KEY"
+ffmpeg -re -i "input.mp4" -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -g 60 -c:a aac -b:a 160k -ar 44100 -f flv "rtmp://live.twitch.tv/app/YOUR_STREAM_KEY"
 
 # Screen capture + stream (macOS)
-ffmpeg \
-  -f avfoundation -framerate 30 -i "1:0" \
-  -c:v libx264 -preset veryfast -b:v 4500k \
-  -c:a aac -b:a 160k \
-  -f flv "rtmp://YOUR_RTMP_ENDPOINT"
+ffmpeg -f avfoundation -framerate 30 -i "1:0" -c:v libx264 -preset veryfast -b:v 4500k -c:a aac -b:a 160k -f flv "rtmp://YOUR_RTMP_ENDPOINT"
 ```
 
 ---
@@ -583,39 +469,28 @@ ffmpeg \
 ffmpeg -f avfoundation -list_devices true -i ""
 
 # Record screen (device 1) with audio (device 0)
-ffmpeg -f avfoundation -framerate 30 -i "1:0" \
-  -c:v libx264 -preset ultrafast -crf 18 \
-  -c:a aac -b:a 192k \
-  "screen_recording.mp4"
+ffmpeg -f avfoundation -framerate 30 -i "1:0" -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 192k "screen_recording.mp4"
 
 # Linux (x11grab + PulseAudio)
-ffmpeg -f x11grab -r 30 -s 1920x1080 -i :0.0+0,0 \
-  -f pulse -ac 2 -i default \
-  -c:v libx264 -preset ultrafast -crf 18 \
-  "screen_recording.mp4"
+ffmpeg -f x11grab -r 30 -s 1920x1080 -i :0.0+0,0 -f pulse -ac 2 -i default -c:v libx264 -preset ultrafast -crf 18 "screen_recording.mp4"
 # Note: -f pulse is PulseAudio. On modern Linux (Ubuntu 22.04+, PipeWire):
 # replace -f pulse -i default  with  -f pipewire -i default
 # or use pactl to find the correct PipeWire source name
 
 # Windows (gdigrab)
-ffmpeg -f gdigrab -framerate 30 -i desktop \
-  -c:v libx264 -preset ultrafast -crf 18 \
-  "screen_recording.mp4"
+ffmpeg -f gdigrab -framerate 30 -i desktop -c:v libx264 -preset ultrafast -crf 18 "screen_recording.mp4"
 ```
 
 ### G2. Webcam Capture
 ```sh
 # macOS
-ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -i "0" \
-  -c:v libx264 -crf 23 "webcam.mp4"
+ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -i "0" -c:v libx264 -crf 23 "webcam.mp4"
 
 # Linux (v4l2)
-ffmpeg -f v4l2 -framerate 30 -video_size 1280x720 -i /dev/video0 \
-  -c:v libx264 -crf 23 "webcam.mp4"
+ffmpeg -f v4l2 -framerate 30 -video_size 1280x720 -i /dev/video0 -c:v libx264 -crf 23 "webcam.mp4"
 
 # Windows (dshow)
-ffmpeg -f dshow -i video="Integrated Camera" \
-  -c:v libx264 -crf 23 "webcam.mp4"
+ffmpeg -f dshow -i video="Integrated Camera" -c:v libx264 -crf 23 "webcam.mp4"
 ```
 
 ---
@@ -626,14 +501,10 @@ ffmpeg -f dshow -i video="Integrated Camera" \
 ```sh
 # Two-pass high-quality GIF (palette generation)
 # Pass 1: Generate optimal palette
-ffmpeg -i "input.mp4" \
-  -vf "fps=15,scale=480:-1:flags=lanczos,palettegen=stats_mode=diff" \
-  -y "palette.png"
+ffmpeg -i "input.mp4" -vf "fps=15,scale=480:-1:flags=lanczos,palettegen=stats_mode=diff" -y "palette.png"
 
 # Pass 2: Apply palette
-ffmpeg -i "input.mp4" -i "palette.png" \
-  -filter_complex "fps=15,scale=480:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
-  -y "output.gif"
+ffmpeg -i "input.mp4" -i "palette.png" -filter_complex "fps=15,scale=480:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -y "output.gif"
 ```
 
 ### H2. GIF → Video
@@ -643,9 +514,7 @@ ffmpeg -i "input.gif" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "output
 
 ### H3. WebP Animation
 ```sh
-ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
-  -loop 0 -preset default -an -fps_mode passthrough \
-  "output.webp"
+ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" -loop 0 -preset default -an -fps_mode passthrough "output.webp"
 # Note: -vsync 0 is deprecated since ffmpeg 5.1; use -fps_mode passthrough
 ```
 
@@ -657,12 +526,7 @@ ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
 ```sh
 # Convert all .mov files to .mp4 (bash/zsh — macOS/Linux only)
 for f in *.mov; do
-  ffmpeg -i "$f" \
-    -c:v libx264 -crf 23 -preset slow \
-    -c:a aac -b:a 192k \
-    -movflags +faststart \
-    "${f%.mov}.mp4" \
-    && echo "Done: $f" || echo "FAILED: $f"
+  ffmpeg -i "$f" -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 192k -movflags +faststart "${f%.mov}.mp4" && echo "Done: $f" || echo "FAILED: $f"
 done
 
 # Windows PowerShell equivalent:
@@ -677,18 +541,13 @@ printf '%s\n' *.mov | parallel -j4 'ffmpeg -i {} -c:v libx264 -crf 23 {.}.mp4'
 ### I2. Progress Monitoring
 ```sh
 # Machine-readable progress output
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -crf 23 \
-  -progress pipe:1 -nostats \
-  "output.mp4" 2>/dev/null
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -progress pipe:1 -nostats "output.mp4" 2>/dev/null
 # Note: 2>/dev/null suppresses stderr on macOS/Linux. On Windows use: 2>NUL
 
 # Duration-aware progress percentage (bash/zsh — macOS/Linux)
-DURATION=$(ffprobe -v error -show_entries format=duration \
-  -of default=noprint_wrappers=1:nokey=1 "input.mp4")
-ffmpeg -i "input.mp4" -c:v libx264 -crf 23 \
-  -progress pipe:1 "output.mp4" 2>/dev/null | \
-  python3 -c "
+DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "input.mp4")
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -progress pipe:1 "output.mp4" 2>/dev/null | \
+python3 -c "
 import sys, re
 dur = float('$DURATION')
 for line in sys.stdin:
@@ -701,14 +560,10 @@ for line in sys.stdin:
 ### I3. Two-Pass Encoding (Precise Bitrate Control)
 ```sh
 # Pass 1 (analysis only)
-ffmpeg -y -i "input.mp4" \
-  -c:v libx264 -b:v 2M -pass 1 -an -f null -
+ffmpeg -y -i "input.mp4" -c:v libx264 -b:v 2M -pass 1 -an -f null -
 
 # Pass 2 (encode with target bitrate)
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -b:v 2M -pass 2 \
-  -c:a aac -b:a 192k \
-  "output_2pass.mp4"
+ffmpeg -i "input.mp4" -c:v libx264 -b:v 2M -pass 2 -c:a aac -b:a 192k "output_2pass.mp4"
 ```
 
 ---
@@ -718,59 +573,34 @@ ffmpeg -i "input.mp4" \
 ### J1. Complex Filter Examples
 ```sh
 # Side-by-side video comparison
-ffmpeg -i "original.mp4" -i "processed.mp4" \
-  -filter_complex "[0:v][1:v]hstack=inputs=2[v]" \
-  -map "[v]" -c:v libx264 -crf 23 \
-  "comparison.mp4"
+ffmpeg -i "original.mp4" -i "processed.mp4" -filter_complex "[0:v][1:v]hstack=inputs=2[v]" -map "[v]" -c:v libx264 -crf 23 "comparison.mp4"
 
 # Stack videos vertically
-ffmpeg -i "top.mp4" -i "bottom.mp4" \
-  -filter_complex "[0:v][1:v]vstack=inputs=2[v]" \
-  -map "[v]" -c:v libx264 -crf 23 \
-  "stacked.mp4"
+ffmpeg -i "top.mp4" -i "bottom.mp4" -filter_complex "[0:v][1:v]vstack=inputs=2[v]" -map "[v]" -c:v libx264 -crf 23 "stacked.mp4"
 
 # 2x2 grid layout
-ffmpeg -i "v1.mp4" -i "v2.mp4" -i "v3.mp4" -i "v4.mp4" \
-  -filter_complex \
-    "[0:v][1:v]hstack[top]; \
-     [2:v][3:v]hstack[bottom]; \
-     [top][bottom]vstack[v]" \
-  -map "[v]" -c:v libx264 -crf 23 \
-  "grid_2x2.mp4"
+ffmpeg -i "v1.mp4" -i "v2.mp4" -i "v3.mp4" -i "v4.mp4" -filter_complex "[0:v][1:v]hstack[top]; [2:v][3:v]hstack[bottom]; [top][bottom]vstack[v]" -map "[v]" -c:v libx264 -crf 23 "grid_2x2.mp4"
 
 # Zoom/Pan (Ken Burns effect)
-ffmpeg -i "photo.jpg" -t 10 \
-  -vf "zoompan=z='min(zoom+0.0015,1.5)':d=250:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',scale=1280:720" \
-  -c:v libx264 -crf 23 \
-  "ken_burns.mp4"
+ffmpeg -i "photo.jpg" -t 10 -vf "zoompan=z='min(zoom+0.0015,1.5)':d=250:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',scale=1280:720" -c:v libx264 -crf 23 "ken_burns.mp4"
 
 # Vignette effect
-ffmpeg -i "input.mp4" \
-  -vf "vignette=PI/4:eval=frame" \
-  -c:a copy "output_vignette.mp4"
+ffmpeg -i "input.mp4" -vf "vignette=PI/4:eval=frame" -c:a copy "output_vignette.mp4"
 
 # Blur (useful for privacy/background)
-ffmpeg -i "input.mp4" \
-  -vf "boxblur=10:1" \
-  -c:a copy "output_blurred.mp4"
+ffmpeg -i "input.mp4" -vf "boxblur=10:1" -c:a copy "output_blurred.mp4"
 
 # Selective blur (blur a region, keep rest sharp)
-ffmpeg -i "input.mp4" \
-  -filter_complex \
-    "[0:v]crop=200:200:100:100,boxblur=10[blurred]; \
-     [0:v][blurred]overlay=100:100[v]" \
-  -map "[v]" -c:a copy "output_region_blur.mp4"
+ffmpeg -i "input.mp4" -filter_complex "[0:v]crop=200:200:100:100,boxblur=10[blurred]; [0:v][blurred]overlay=100:100[v]" -map "[v]" -c:a copy "output_region_blur.mp4"
 ```
 
 ### J2. Audio/Video Sync Repair
 ```sh
 # Fix audio delay (audio is 500ms late)
-ffmpeg -i "input.mp4" -itsoffset -0.5 -i "input.mp4" \
-  -map 1:v -map 0:a -c copy "output_synced.mp4"
+ffmpeg -i "input.mp4" -itsoffset -0.5 -i "input.mp4" -map 1:v -map 0:a -c copy "output_synced.mp4"
 
 # Add audio delay (audio is 500ms early)
-ffmpeg -i "input.mp4" -itsoffset 0.5 -i "input.mp4" \
-  -map 0:v -map 1:a -c copy "output_synced.mp4"
+ffmpeg -i "input.mp4" -itsoffset 0.5 -i "input.mp4" -map 0:v -map 1:a -c copy "output_synced.mp4"
 ```
 
 ---
@@ -780,17 +610,13 @@ ffmpeg -i "input.mp4" -itsoffset 0.5 -i "input.mp4" \
 ### K1. Quality Metrics
 ```sh
 # PSNR (Peak Signal-to-Noise Ratio) — higher is better
-ffmpeg -i "original.mp4" -i "compressed.mp4" \
-  -lavfi psnr="stats_file=psnr.log" -f null -
+ffmpeg -i "original.mp4" -i "compressed.mp4" -lavfi psnr="stats_file=psnr.log" -f null -
 
 # SSIM (Structural Similarity Index) — closer to 1.0 is better
-ffmpeg -i "original.mp4" -i "compressed.mp4" \
-  -lavfi ssim="stats_file=ssim.log" -f null -
+ffmpeg -i "original.mp4" -i "compressed.mp4" -lavfi ssim="stats_file=ssim.log" -f null -
 
 # VMAF (Netflix perceptual quality — industry standard)
-ffmpeg -i "original.mp4" -i "compressed.mp4" \
-  -lavfi libvmaf="log_fmt=json:log_path=vmaf.json:n_threads=4" \
-  -f null -
+ffmpeg -i "original.mp4" -i "compressed.mp4" -lavfi libvmaf="log_fmt=json:log_path=vmaf.json:n_threads=4" -f null -
 ```
 
 ### K2. Output Validation Checklist
@@ -799,10 +625,7 @@ After every encode, verify:
 
 ```sh
 # Check output is valid and playable
-ffprobe -v error -show_entries \
-  format=duration,size,bit_rate \
-  -show_entries stream=codec_name,codec_type,width,height,r_frame_rate,bit_rate \
-  -of default=noprint_wrappers=1 "output.mp4"
+ffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_name,codec_type,width,height,r_frame_rate,bit_rate -of default=noprint_wrappers=1 "output.mp4"
 
 # Confirm stream count matches expectation
 ffprobe -v error -show_entries stream=index,codec_type -of csv "output.mp4"
@@ -817,42 +640,22 @@ ffmpeg -v error -i "output.mp4" -f null - 2>&1 | head -n 20
 
 ### L1. Web (HTML5 video)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -crf 23 -preset slow \
-  -c:a aac -b:a 128k \
-  -pix_fmt yuv420p \
-  -movflags +faststart \
-  -profile:v high -level 4.0 \
-  "web.mp4"
+ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 128k -pix_fmt yuv420p -movflags +faststart -profile:v high -level 4.0 "web.mp4"
 ```
 
 ### L2. YouTube Upload
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -crf 18 -preset slow \
-  -c:a aac -b:a 384k -ar 48000 \
-  -pix_fmt yuv420p \
-  -r 29.97 \
-  -movflags +faststart \
-  "youtube_upload.mp4"
+ffmpeg -i "input.mp4" -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 384k -ar 48000 -pix_fmt yuv420p -r 29.97 -movflags +faststart "youtube_upload.mp4"
 ```
 
 ### L3. Instagram / TikTok (Vertical 9:16)
 ```sh
-ffmpeg -i "input.mp4" \
-  -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
-  -c:v libx264 -crf 23 -preset slow \
-  -c:a aac -b:a 192k \
-  -t 60 \
-  "instagram_reel.mp4"
+ffmpeg -i "input.mp4" -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" -c:v libx264 -crf 23 -preset slow -c:a aac -b:a 192k -t 60 "instagram_reel.mp4"
 ```
 
 ### L4. Apple ProRes (Post-production)
 ```sh
-ffmpeg -i "input.mp4" \
-  -c:v prores_ks -profile:v 3 \
-  -c:a pcm_s16le \
-  "output_prores.mov"
+ffmpeg -i "input.mp4" -c:v prores_ks -profile:v 3 -c:a pcm_s16le "output_prores.mov"
 # Profiles: 0=Proxy, 1=LT, 2=Standard, 3=HQ, 4=4444, 5=4444XQ
 ```
 
@@ -861,12 +664,8 @@ ffmpeg -i "input.mp4" \
 # Calculate target bitrate for 8MB / duration
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "input.mp4")
 TARGET_KBPS=$(python3 -c "print(int(8*1024*8 / $DURATION - 128))")
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 1 -an -f null - && \
-ffmpeg -i "input.mp4" \
-  -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 2 \
-  -c:a aac -b:a 128k \
-  "discord_clip.mp4"
+ffmpeg -i "input.mp4" -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 1 -an -f null - && \
+ffmpeg -i "input.mp4" -c:v libx264 -b:v "${TARGET_KBPS}k" -pass 2 -c:a aac -b:a 128k "discord_clip.mp4"
 ```
 
 ---
@@ -896,16 +695,13 @@ ffmpeg -i input.mp4 -vf vidstabdetect=shakiness=5:accuracy=15:result=transforms.
 ### Pass 2 — Apply stabilization
 ```sh
 # smoothing: number of frames to average (higher = smoother but more crop). zoom: extra zoom to hide black borders.
-ffmpeg -i input.mp4 \
-  -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" \
-  -c:v libx264 -crf 18 -c:a copy stabilized.mp4
+ffmpeg -i input.mp4 -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" -c:v libx264 -crf 18 -c:a copy stabilized.mp4
 ```
 
 ### One-liner (both passes)
 ```sh
 ffmpeg -i input.mp4 -vf vidstabdetect=shakiness=5:accuracy=15:result=transforms.trf -f null - && \
-ffmpeg -i input.mp4 -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" \
-  -c:v libx264 -crf 18 -c:a copy stabilized.mp4
+ffmpeg -i input.mp4 -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" -c:v libx264 -crf 18 -c:a copy stabilized.mp4
 ```
 
 ### Windows (PowerShell)
@@ -947,9 +743,7 @@ ffmpeg -i cubemap.mp4 -vf "v360=c3x2:equirect" -c:v libx264 -crf 18 -c:a copy eq
 ### Inject spherical metadata (YouTube VR / Facebook 360)
 ```sh
 # Inject metadata so platforms recognize as 360° video
-ffmpeg -i input_360.mp4 -c copy \
-  -metadata:s:v:0 spherical-video=equirectangular \
-  output_360.mp4
+ffmpeg -i input_360.mp4 -c copy -metadata:s:v:0 spherical-video=equirectangular output_360.mp4
 ```
 
 > **Note:** For full YouTube VR compliance, use Google's [spatial-media tool](https://github.com/google/spatial-media) after encoding to inject the proper XMP metadata atom. FFmpeg metadata injection is a best-effort fallback.
@@ -957,9 +751,7 @@ ffmpeg -i input_360.mp4 -c copy \
 ### Reframe / extract a flat view from 360° video
 ```sh
 # Extract a flat 1920x1080 view from equirectangular (yaw=0, pitch=0, fov=90)
-ffmpeg -i input_360.mp4 \
-  -vf "v360=equirect:flat:yaw=0:pitch=0:roll=0:h_fov=90:v_fov=90:w=1920:h=1080" \
-  -c:v libx264 -crf 18 -c:a copy flat_view.mp4
+ffmpeg -i input_360.mp4 -vf "v360=equirect:flat:yaw=0:pitch=0:roll=0:h_fov=90:v_fov=90:w=1920:h=1080" -c:v libx264 -crf 18 -c:a copy flat_view.mp4
 ```
 
 ### macOS / Linux / Windows
@@ -985,36 +777,24 @@ ffmpeg -filters 2>&1 | grep -E "zscale|colorspace|tonemap"
 ffprobe -v quiet -select_streams v:0 -show_entries stream=color_space,color_transfer,color_primaries -of default input.mp4
 
 # Pass 2: tone map to SDR
-ffmpeg -i input_hdr10.mp4 \
-  -vf "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p" \
-  -c:v libx264 -crf 18 -c:a copy sdr_output.mp4
+ffmpeg -i input_hdr10.mp4 -vf "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p" -c:v libx264 -crf 18 -c:a copy sdr_output.mp4
 ```
 
 ### Colorspace conversion (SDR bt2020 → bt709)
 ```sh
 # For files tagged bt2020 but not true HDR (common from some Android phones)
-ffmpeg -i input.mp4 \
-  -vf "colorspace=bt709:iall=bt2020:fast=1" \
-  -c:v libx264 -crf 18 -c:a copy bt709_output.mp4
+ffmpeg -i input.mp4 -vf "colorspace=bt709:iall=bt2020:fast=1" -c:v libx264 -crf 18 -c:a copy bt709_output.mp4
 ```
 
 ### Encode HDR10 output (for archival/editing)
 ```sh
 # Encode to HDR10 with proper metadata
-ffmpeg -i input.mp4 \
-  -vf "format=yuv420p10le" \
-  -c:v libx265 \
-  -x265-params "colorprim=bt2020:transfer=smpte2084:colormatrix=bt2020nc:hdr-opt=1:repeat-headers=1:master-display=G(13250,34500)B(7500,3000)R(34000,16000)WP(15635,16450)L(10000000,1):max-cll=1000,400" \
-  -c:a copy hdr10_output.mp4
+ffmpeg -i input.mp4 -vf "format=yuv420p10le" -c:v libx265 -x265-params "colorprim=bt2020:transfer=smpte2084:colormatrix=bt2020nc:hdr-opt=1:repeat-headers=1:master-display=G(13250,34500)B(7500,3000)R(34000,16000)WP(15635,16450)L(10000000,1):max-cll=1000,400" -c:a copy hdr10_output.mp4
 ```
 
 ### Tag existing file with correct color metadata (no re-encode)
 ```sh
-ffmpeg -i input.mp4 -c copy \
-  -color_primaries bt2020 \
-  -color_trc smpte2084 \
-  -colorspace bt2020nc \
-  tagged_hdr10.mp4
+ffmpeg -i input.mp4 -c copy -color_primaries bt2020 -color_trc smpte2084 -colorspace bt2020nc tagged_hdr10.mp4
 ```
 
 ### Tone mapping algorithm comparison
@@ -1041,15 +821,13 @@ SRT handles packet loss and network jitter, making it ideal for unstable connect
 ffmpeg -protocols 2>&1 | grep srt
 
 # Send stream via SRT (caller mode)
-ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac -b:a 128k \
-  -f mpegts "srt://receiver_ip:port?pkt_size=1316"
+ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac -b:a 128k -f mpegts "srt://receiver_ip:port?pkt_size=1316"
 
 # Receive SRT stream and save
 ffmpeg -i "srt://0.0.0.0:port?mode=listener" -c copy output.mp4
 
 # SRT with latency tuning (default 120ms, increase for unreliable links)
-ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac \
-  -f mpegts "srt://receiver_ip:port?pkt_size=1316&latency=500000"
+ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac -f mpegts "srt://receiver_ip:port?pkt_size=1316&latency=500000"
 ```
 
 > **Windows:** Same commands work in PowerShell. SRT is included in full ffmpeg builds from gyan.dev.
@@ -1059,13 +837,7 @@ ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac \
 Stream to YouTube, Twitch, and Facebook simultaneously from one ffmpeg process:
 
 ```sh
-ffmpeg -re -i input.mp4 \
-  -c:v libx264 -b:v 4500k -maxrate 4500k -bufsize 9000k \
-  -c:a aac -b:a 128k -ar 44100 \
-  -f tee \
-  "[f=flv]rtmp://a.rtmp.youtube.com/live2/YOUR_YOUTUBE_KEY|\
-[f=flv]rtmp://live.twitch.tv/app/YOUR_TWITCH_KEY|\
-[f=flv]rtmps://live-api-s.facebook.com:443/rtmp/YOUR_FB_KEY"
+ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4500k -maxrate 4500k -bufsize 9000k -c:a aac -b:a 128k -ar 44100 -f tee "[f=flv]rtmp://a.rtmp.youtube.com/live2/YOUR_YOUTUBE_KEY|[f=flv]rtmp://live.twitch.tv/app/YOUR_TWITCH_KEY|[f=flv]rtmps://live-api-s.facebook.com:443/rtmp/YOUR_FB_KEY"
 ```
 
 ### Rolling window DVR recording
@@ -1075,31 +847,16 @@ Continuous loop recording — keeps only the last N segments (useful for securit
 ```sh
 # Record in 60-second segments, keep only last 10 (10 minutes of rolling buffer)
 # segment_wrap=10 means segment_000 through segment_009, then wraps back
-ffmpeg -i input_stream_or_device \
-  -c:v libx264 -b:v 2000k -c:a aac \
-  -f segment \
-  -segment_time 60 \
-  -segment_wrap 10 \
-  -reset_timestamps 1 \
-  dvr_segment_%03d.ts
+ffmpeg -i input_stream_or_device -c:v libx264 -b:v 2000k -c:a aac -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 dvr_segment_%03d.ts
 
 # macOS screen capture rolling DVR
-ffmpeg -f avfoundation -i "1:0" \
-  -c:v libx264 -b:v 2000k -c:a aac \
-  -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 \
-  dvr_%03d.ts
+ffmpeg -f avfoundation -i "1:0" -c:v libx264 -b:v 2000k -c:a aac -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 dvr_%03d.ts
 
 # Linux screen capture rolling DVR
-ffmpeg -f x11grab -r 30 -i :0.0 -f pulse -i default \
-  -c:v libx264 -b:v 2000k -c:a aac \
-  -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 \
-  dvr_%03d.ts
+ffmpeg -f x11grab -r 30 -i :0.0 -f pulse -i default -c:v libx264 -b:v 2000k -c:a aac -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 dvr_%03d.ts
 
 # Windows screen capture rolling DVR (PowerShell)
-ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="Microphone" `
-  -c:v libx264 -b:v 2000k -c:a aac `
-  -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 `
-  dvr_%03d.ts
+ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="Microphone" -c:v libx264 -b:v 2000k -c:a aac -f segment -segment_time 60 -segment_wrap 10 -reset_timestamps 1 dvr_%03d.ts
 ```
 
 ---
@@ -1109,15 +866,10 @@ ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="Microphone" `
 ### Recover from corrupt or truncated files
 ```sh
 # Attempt recovery — ignore errors and discard corrupt packets
-ffmpeg -i corrupt_input.mp4 \
-  -c copy \
-  -err_detect ignore_err \
-  -fflags +discardcorrupt \
-  recovered.mp4
+ffmpeg -i corrupt_input.mp4 -c copy -err_detect ignore_err -fflags +discardcorrupt recovered.mp4
 
 # Increase probe size for files with missing moov atom or bad headers
-ffmpeg -analyzeduration 100M -probesize 100M \
-  -i corrupt_input.mp4 -c copy recovered.mp4
+ffmpeg -analyzeduration 100M -probesize 100M -i corrupt_input.mp4 -c copy recovered.mp4
 
 # Fix files that won't open at all (try forcing container format)
 ffmpeg -f mp4 -i corrupt_input.mp4 -c copy recovered.mp4
@@ -1134,17 +886,14 @@ Variable frame rate (VFR) footage — common from phones and screen recorders �
 ffmpeg -i input_vfr.mp4 -vsync cfr -r 30 -c:v libx264 -crf 18 -c:a copy cfr_output.mp4
 
 # Detect if input is VFR first
-ffprobe -v quiet -select_streams v:0 \
-  -show_entries stream=r_frame_rate,avg_frame_rate \
-  -of default input.mp4
+ffprobe -v quiet -select_streams v:0 -show_entries stream=r_frame_rate,avg_frame_rate -of default input.mp4
 # If r_frame_rate != avg_frame_rate → VFR confirmed
 ```
 
 ### Fix audio/video sync offset
 ```sh
 # Audio is N seconds late (positive = delay audio, negative = advance audio)
-ffmpeg -i input.mp4 -itsoffset 0.5 -i input.mp4 \
-  -map 0:v -map 1:a -c copy sync_fixed.mp4
+ffmpeg -i input.mp4 -itsoffset 0.5 -i input.mp4 -map 0:v -map 1:a -c copy sync_fixed.mp4
 
 # Simpler: shift audio stream only
 ffmpeg -i input.mp4 -c:v copy -af "adelay=500|500" sync_fixed.mp4
@@ -1167,29 +916,19 @@ All recovery commands are platform-independent. On Windows PowerShell, use backt
 ### Embed key/value metadata tags
 ```sh
 # Add title, artist, year, comment
-ffmpeg -i input.mp4 \
-  -metadata title="My Video" \
-  -metadata artist="Author Name" \
-  -metadata year="2025" \
-  -metadata comment="Description here" \
-  -c copy tagged.mp4
+ffmpeg -i input.mp4 -metadata title="My Video" -metadata artist="Author Name" -metadata year="2025" -metadata comment="Description here" -c copy tagged.mp4
 
 # Audio files: embed standard ID3-style tags
-ffmpeg -i input.mp3 \
-  -metadata title="Song Title" \
-  -metadata artist="Artist" \
-  -metadata album="Album" \
-  -metadata track="1" \
-  -c copy tagged.mp3
+ffmpeg -i input.mp3 -metadata title="Song Title" -metadata artist="Artist" -metadata album="Album" -metadata track="1" -c copy tagged.mp3
 ```
 
 ### Strip all metadata (privacy)
 ```sh
-# Remove all metadata from file
-ffmpeg -i input.mp4 -map_metadata -1 -c copy stripped.mp4
+# Remove all metadata from file (including encoder tag)
+ffmpeg -fflags +bitexact -i input.mp4 -map_metadata -1 -map_chapters -1 -c copy -metadata:s:v:0 handler_name= -metadata encoder= -metadata:s:a:0 handler_name= stripped.mp4
 
-# Verify metadata is gone
-ffprobe -v quiet -show_format -of json stripped.mp4 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['format'].get('tags', 'No tags — CLEAN'))"
+# Verify metadata (except things like major_brand, minor_version, compatible_brands, encoder) is gone
+ffprobe -v quiet -show_entries format_tags -of json stripped.mp4
 ```
 
 ### Add chapter markers
@@ -1228,27 +967,16 @@ ffprobe -v quiet -show_chapters chaptered.mp4
 ### Embed cover art into audio file (MP3, M4A, AAC)
 ```sh
 # Embed cover art into MP3
-ffmpeg -i input.mp3 -i cover.jpg \
-  -map 0 -map 1 \
-  -c copy -id3v2_version 3 \
-  -metadata:s:v title="Album cover" \
-  -metadata:s:v comment="Cover (front)" \
-  output_with_cover.mp3
+ffmpeg -i input.mp3 -i cover.jpg -map 0 -map 1 -c copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" output_with_cover.mp3
 
 # Embed cover art into M4A/AAC
-ffmpeg -i input.m4a -i cover.jpg \
-  -map 0 -map 1 \
-  -c copy -disposition:v:0 attached_pic \
-  output_with_cover.m4a
+ffmpeg -i input.m4a -i cover.jpg -map 0 -map 1 -c copy -disposition:v:0 attached_pic output_with_cover.m4a
 ```
 
 ### Multi-language audio/subtitle track management
 ```sh
 # Add language tag to existing track
-ffmpeg -i input.mp4 -c copy \
-  -metadata:s:a:0 language=eng \
-  -metadata:s:a:1 language=spa \
-  tagged_lang.mp4
+ffmpeg -i input.mp4 -c copy -metadata:s:a:0 language=eng -metadata:s:a:1 language=spa tagged_lang.mp4
 
 # Extract specific language track
 ffmpeg -i input.mp4 -map 0:a:0 -c copy english_audio.aac
@@ -1259,7 +987,8 @@ ffmpeg -i input.mp4 -map 0 -map -0:a:1 -c copy removed_track.mp4
 
 ### Read all metadata
 ```sh
-ffprobe -v quiet -show_format -show_streams -of json input.mp4 | python3 -c "
+ffprobe -v quiet -show_format -show_streams -of json input.mp4 | \
+python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 print('=== Format Tags ===')
@@ -1279,25 +1008,20 @@ for i, s in enumerate(d['streams']):
 ### Generate SMPTE color bars + tone (calibration signal)
 ```sh
 # Standard SMPTE color bars with 1kHz test tone — use to verify encoding pipeline
-ffmpeg -f lavfi -i "smptebars=duration=10:size=1920x1080:rate=30" \
-       -f lavfi -i "sine=frequency=1000:duration=10" \
-       -c:v libx264 -crf 18 -c:a aac \
-       smpte_bars.mp4
+ffmpeg -f lavfi -i "smptebars=duration=10:size=1920x1080:rate=30" -f lavfi -i "sine=frequency=1000:duration=10" -c:v libx264 -crf 18 -c:a aac smpte_bars.mp4
 
 # SMPTE HDBars (HD version)
-ffmpeg -f lavfi -i "smptehdbars=duration=10:size=1920x1080:rate=30" \
-       -f lavfi -i "sine=frequency=1000:duration=10" \
-       -c:v libx264 -crf 18 -c:a aac \
-       smpte_hdbars.mp4
+ffmpeg -f lavfi -i "smptehdbars=duration=10:size=1920x1080:rate=30" -f lavfi -i "sine=frequency=1000:duration=10" -c:v libx264 -crf 18 -c:a aac smpte_hdbars.mp4
 
 # Windows PowerShell — identical commands
 ```
 
 ### Packet-level analysis (find corruption, missing keyframes)
+
 ```sh
 # List all video packets with PTS, DTS, size, flags
-ffprobe -v quiet -select_streams v:0 \
-  -show_packets -of json input.mp4 | python3 -c "
+ffprobe -v quiet -select_streams v:0 -show_packets -of json input.mp4 | \
+python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 pkts = d['packets']
@@ -1311,7 +1035,7 @@ if gaps: print(f'Gaps detected : {gaps[:5]}')
 else: print('No gaps detected')
 "
 
-# Detect corrupt packets
+# Detect corrupt packets (exit status non-zero if corruption found)
 ffmpeg -v error -i input.mp4 -f null - 2>&1 | grep -E "corrupt|invalid|error"
 
 # Windows PowerShell
@@ -1354,7 +1078,8 @@ EOF
 ffmpeg -i input.mp4 -c:v copy -bsf:v trace_headers -f null - 2>&1 | head -50
 
 # Check if MP4 is streamable (moov atom position)
-ffprobe -v quiet -show_format -of json input.mp4 | python3 -c "
+ffprobe -v quiet -show_format -of json input.mp4 | \
+python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 print('Format:', d['format']['format_name'])

@@ -51,10 +51,8 @@ sudo dnf install -y ffmpeg
 ## Docker (any platform)
 ```sh
 # macOS / Linux
-docker run --rm -v "$(pwd):/work" -w /work jrottenberg/ffmpeg:latest \
-  -i input.mp4 output.mp4
+docker run --rm -v "$(pwd):/work" -w /work jrottenberg/ffmpeg:latest -i input.mp4 output.mp4
 
 # Windows PowerShell
-docker run --rm -v "${PWD}:/work" -w /work jrottenberg/ffmpeg:latest `
-  -i input.mp4 output.mp4
+docker run --rm -v "${PWD}:/work" -w /work jrottenberg/ffmpeg:latest -i input.mp4 output.mp4
 ```

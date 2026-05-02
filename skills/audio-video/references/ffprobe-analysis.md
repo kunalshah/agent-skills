@@ -14,32 +14,24 @@ ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:no
 
 ### Resolution
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream=width,height \
-  -of csv=s=x:p=0 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "input.mp4"
 # Output: 1920x1080
 ```
 
 ### Frame rate
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream=r_frame_rate \
-  -of default=noprint_wrappers=1:nokey=1 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 # Output: 30000/1001 (≈29.97fps) — divide for decimal
 ```
 
 ### Video codec
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream=codec_name,profile,level \
-  -of default=noprint_wrappers=1 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,profile,level -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### Audio info
 ```sh
-ffprobe -v error -select_streams a:0 \
-  -show_entries stream=codec_name,sample_rate,channels,channel_layout,bit_rate \
-  -of default=noprint_wrappers=1 "input.mp4"
+ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels,channel_layout,bit_rate -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### File size (bytes)
@@ -59,8 +51,7 @@ ffprobe -v error -show_entries format=nb_streams -of default=noprint_wrappers=1:
 
 ### List all streams with types
 ```sh
-ffprobe -v error -show_entries stream=index,codec_type,codec_name \
-  -of csv=p=0 "input.mp4"
+ffprobe -v error -show_entries stream=index,codec_type,codec_name -of csv=p=0 "input.mp4"
 # Output:
 # 0,video,h264
 # 1,audio,aac
@@ -69,29 +60,23 @@ ffprobe -v error -show_entries stream=index,codec_type,codec_name \
 
 ### Rotation metadata
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream_tags=rotate \
-  -of default=noprint_wrappers=1:nokey=1 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream_tags=rotate -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Pixel format (important for filter compatibility)
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream=pix_fmt \
-  -of default=noprint_wrappers=1:nokey=1 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Color space / HDR info
 ```sh
-ffprobe -v error -select_streams v:0 \
-  -show_entries stream=color_space,color_transfer,color_primaries \
-  -of default=noprint_wrappers=1 "input.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=color_space,color_transfer,color_primaries -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### Chapter list
 ```sh
 ffprobe -v quiet -print_format json -show_chapters "input.mp4" | \
-  python3 -c "import sys,json; [print(f'{c[\"start_time\"]}s - {c[\"end_time\"]}s: {c[\"tags\"].get(\"title\",\"Untitled\")}') for c in json.load(sys.stdin)['chapters']]"
+python3 -c "import sys,json; [print(f'{c[\"start_time\"]}s - {c[\"end_time\"]}s: {c[\"tags\"].get(\"title\",\"Untitled\")}') for c in json.load(sys.stdin)['chapters']]"
 ```
 
 ## Parse JSON with jq
@@ -104,8 +89,7 @@ ffprobe -v quiet -print_format json -show_format "input.mp4" | jq '.format.durat
 ffprobe -v quiet -print_format json -show_streams "input.mp4" | jq '[.streams[] | {index, codec_type, codec_name}]'
 
 # Video resolution
-ffprobe -v quiet -print_format json -show_streams "input.mp4" | \
-  jq '.streams[] | select(.codec_type=="video") | "\(.width)x\(.height)"'
+ffprobe -v quiet -print_format json -show_streams "input.mp4" | jq '.streams[] | select(.codec_type=="video") | "\(.width)x\(.height)"'
 ```
 
 ## Parse JSON with Python
