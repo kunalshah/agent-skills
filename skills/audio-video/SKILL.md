@@ -1,14 +1,11 @@
 ---
 name: audio-video
 description: "Expert audio/video processing with ffmpeg and ffprobe. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe, stabilize video, video stabilization, shaky footage, 360 video, VR video, equirectangular, cubemap, v360, HDR, tone mapping, HDR to SDR, bt2020, smpte2084, color space, SRT streaming, low latency stream, multi-destination stream, tee muxer, restream, DVR recording, rolling window, repair video, corrupt video, VFR to CFR, variable frame rate, fix sync, metadata, chapter markers, cover art, strip metadata, embed chapters, SMPTE bars, test signal, packet analysis, encoding benchmark."
-metadata:
-  tools: ffmpeg, ffprobe
-  platforms: macOS, Linux, Windows
 ---
 
 # Audio/Video Processing Skill
 
-You are an expert audio/video engineer with deep mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
+You are an expert audio/video engineer with mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
 
 This skill covers a wide range of audio/video tasks organized by sections below. To know only the features offered by this skill (without knowing the specific commands), read the [features.md](./assets/features.md) which is also organized by sections. `features.md` also mentions several use-cases for which different sections of this skill can be used.
 
@@ -23,72 +20,13 @@ ffmpeg -version 2>&1 | head -1
 ffprobe -version 2>&1 | head -1
 ```
 
-> **Windows**: Run these in PowerShell. `head` is not available — use `ffmpeg -version` and read the first line manually, or pipe to `Select-Object -First 1`.
+> **Windows**: Run these in PowerShell. when `head` is not available, use `ffmpeg -version` and read first line manually, or pipe to `Select-Object -First 1`.
 
-### If ffmpeg/ffprobe is NOT installed:
+### If ffmpeg/ffprobe is NOT installed
 
-**Stop immediately** and provide platform-specific installation instructions:
+**Stop** and provide installation instructions from [install.md](./assets/install.md).
 
-#### macOS
-```bash
-# Option 1: Homebrew (recommended)
-brew install ffmpeg
-
-# Note: Homebrew removed --with-* option flags. The default formula includes
-# the most common codecs. For a build with more codecs (libfdk-aac, etc.):
-#   brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg
-# See: https://formulae.brew.sh/formula/ffmpeg
-
-# Verify
-ffmpeg -version
-```
-
-#### Linux (Ubuntu/Debian)
-```bash
-sudo apt update && sudo apt install -y ffmpeg
-
-# Or for latest static build:
-wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-tar xf ffmpeg-release-amd64-static.tar.xz
-FFDIR=$(find . -maxdepth 1 -type d -name 'ffmpeg-*-static' | head -n1)
-sudo mv "$FFDIR/ffmpeg" "$FFDIR/ffprobe" /usr/local/bin/
-```
-
-#### Linux (RHEL/Fedora/CentOS)
-```bash
-sudo dnf install -y ffmpeg ffmpeg-devel
-# Or via RPM Fusion:
-sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf install -y ffmpeg
-```
-
-#### Windows
-```powershell
-# Option 1: winget
-winget install Gyan.FFmpeg
-
-# Option 2: Chocolatey
-choco install ffmpeg
-
-# Option 3: Scoop
-scoop install ffmpeg
-
-# Option 4: Manual — download from https://www.gyan.dev/ffmpeg/builds/
-# Extract and add to PATH
-```
-
-#### Docker (any platform)
-```bash
-# macOS / Linux
-docker run --rm -v "$(pwd):/work" -w /work jrottenberg/ffmpeg:latest \
-  -i input.mp4 output.mp4
-
-# Windows PowerShell
-docker run --rm -v "${PWD}:/work" -w /work jrottenberg/ffmpeg:latest `
-  -i input.mp4 output.mp4
-```
-
-> **Do not proceed with any other steps until ffmpeg is confirmed installed.**
+**Do not proceed with any other steps until ffmpeg is confirmed installed**
 
 ---
 
