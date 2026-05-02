@@ -1,19 +1,19 @@
 # ffprobe Analysis Reference
 
 ## Complete JSON Output (Most Useful)
-```bash
+```sh
 ffprobe -v quiet -print_format json -show_format -show_streams -show_chapters "input.mp4"
 ```
 
 ## Extract Specific Values
 
 ### Duration (seconds, decimal)
-```bash
+```sh
 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Resolution
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=width,height \
   -of csv=s=x:p=0 "input.mp4"
@@ -21,7 +21,7 @@ ffprobe -v error -select_streams v:0 \
 ```
 
 ### Frame rate
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=r_frame_rate \
   -of default=noprint_wrappers=1:nokey=1 "input.mp4"
@@ -29,36 +29,36 @@ ffprobe -v error -select_streams v:0 \
 ```
 
 ### Video codec
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=codec_name,profile,level \
   -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### Audio info
-```bash
+```sh
 ffprobe -v error -select_streams a:0 \
   -show_entries stream=codec_name,sample_rate,channels,channel_layout,bit_rate \
   -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### File size (bytes)
-```bash
+```sh
 ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Total bitrate
-```bash
+```sh
 ffprobe -v error -show_entries format=bit_rate -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Number of streams
-```bash
+```sh
 ffprobe -v error -show_entries format=nb_streams -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### List all streams with types
-```bash
+```sh
 ffprobe -v error -show_entries stream=index,codec_type,codec_name \
   -of csv=p=0 "input.mp4"
 # Output:
@@ -68,35 +68,35 @@ ffprobe -v error -show_entries stream=index,codec_type,codec_name \
 ```
 
 ### Rotation metadata
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream_tags=rotate \
   -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Pixel format (important for filter compatibility)
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=pix_fmt \
   -of default=noprint_wrappers=1:nokey=1 "input.mp4"
 ```
 
 ### Color space / HDR info
-```bash
+```sh
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=color_space,color_transfer,color_primaries \
   -of default=noprint_wrappers=1 "input.mp4"
 ```
 
 ### Chapter list
-```bash
+```sh
 ffprobe -v quiet -print_format json -show_chapters "input.mp4" | \
   python3 -c "import sys,json; [print(f'{c[\"start_time\"]}s - {c[\"end_time\"]}s: {c[\"tags\"].get(\"title\",\"Untitled\")}') for c in json.load(sys.stdin)['chapters']]"
 ```
 
 ## Parse JSON with jq
 > **Note**: `jq` requires separate installation (`brew install jq` / `apt install jq` / `winget install jqlang.jq`). Use the Python section below if `jq` is unavailable.
-```bash
+```sh
 # Duration
 ffprobe -v quiet -print_format json -show_format "input.mp4" | jq '.format.duration | tonumber'
 

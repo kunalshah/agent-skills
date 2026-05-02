@@ -13,48 +13,48 @@ Use this checklist before delivering any encoded file. Run each verification com
 ## Post-Encode Verification
 
 ### 1. File exists and is non-zero
-```bash
+```sh
 ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
 # Prints file size in bytes; errors if file is missing or empty
 ```
 
 ### 2. No corrupt packets
-```bash
+```sh
 ffmpeg -v error -i "output.mp4" -f null - 2>&1
 # Expected: no output (silence = clean)
 # Note: 2>&1 works on macOS/Linux. On Windows PowerShell use: ffmpeg ... 2>&1 (same syntax in PS); on cmd.exe: 2>&1
 ```
 
 ### 3. Duration matches expected
-```bash
+```sh
 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "output.mp4"
 # Check against input duration
 ```
 
 ### 4. All expected streams present
-```bash
+```sh
 ffprobe -v error -show_entries stream=index,codec_type,codec_name -of csv "output.mp4"
 # Verify: video + audio (+ subtitles if added)
 ```
 
 ### 5. Resolution correct
-```bash
+```sh
 ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "output.mp4"
 ```
 
 ### 6. Frame rate correct
-```bash
+```sh
 ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "output.mp4"
 ```
 
 ### 7. File size within target (if applicable)
-```bash
+```sh
 ffprobe -v error -show_entries format=size -of default=noprint_wrappers=1:nokey=1 "output.mp4"
 # Prints size in bytes
 ```
 
 ### 8. Playable (spot check — requires video player)
-```bash
+```sh
 # macOS
 open "output.mp4"
 # Linux
@@ -65,13 +65,13 @@ start "output.mp4"
 ```
 
 ### 9. Web MP4: moov atom at front
-```bash
+```sh
 ffprobe -v quiet -show_entries format_tags=major_brand -of default "output.mp4"
 # Confirm -movflags +faststart was used if needed
 ```
 
 ### 10. Audio levels acceptable (peak < 0dBFS)
-```bash
+```sh
 ffmpeg -i "output.mp4" -af volumedetect -f null - 2>&1 | grep -E "mean_volume|max_volume"
 # max_volume should be ≤ -0.1 dB (not clipping)
 # Note: grep is not available on Windows — use PowerShell: ffmpeg ... 2>&1 | Select-String "mean_volume|max_volume"

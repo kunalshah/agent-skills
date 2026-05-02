@@ -18,7 +18,7 @@ Comprehensive audio/video processing skill powered by `ffmpeg` and `ffprobe`. Ha
 
 #### MacOS
 
-```bash
+```sh
 brew install ffmpeg-full jq
 ```
 
@@ -37,15 +37,15 @@ brew install ffmpeg-full jq
 
 - jq
 
-  ```bash
+  ```sh
   winget install jqlang.jq
   ```
   OR
-  ```bash
+  ```sh
   choco install jq
   ```
   OR
-  ```bash
+  ```sh
   scoop install jq
   ```
 
@@ -67,16 +67,17 @@ Then install the skill:
 
 with skill CLI, you can install the skill to several coding agents (e.g. Google Antigravity, OpenCode, Gemini CLI, Claude Code etc) at once.
 
-```bash
+```sh
 npx skills add https://github.com/kunalshah/agent-skills --skill audio-video
 ```
 
-### Using the audio-video skill
+### Using this skill
 
-After installing, you can use the skill by mentioning it.
+Examples:
 
-For example: `Use the audio-video skill to compress this video for web.`
+- Use the audio-video skill to compress this video for web. @input.mov
+- /audio-video compress this video for web. @input.mov
 
-### audio-video skill features
+### List of all features
 
 See [here](./skills/audio-video/assets/features.md).

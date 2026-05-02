@@ -91,7 +91,7 @@ Container: .mkv
 - `rgba` — uncompressed RGBA with alpha channel
 
 ## FFmpeg Codec Availability Check
-```bash
+```sh
 # List all available encoders
 ffmpeg -encoders 2>&1
 

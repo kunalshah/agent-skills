@@ -1,7 +1,7 @@
 # Installation instructions
 
 ## macOS
-```bash
+```sh
 # Option 1: Homebrew (recommended)
 brew install ffmpeg
 
@@ -30,7 +30,7 @@ scoop install ffmpeg
 ```
 
 ## Linux (Ubuntu/Debian)
-```bash
+```sh
 sudo apt update && sudo apt install -y ffmpeg
 
 # Or for latest static build:
@@ -41,7 +41,7 @@ sudo mv "$FFDIR/ffmpeg" "$FFDIR/ffprobe" /usr/local/bin/
 ```
 
 ## Linux (RHEL/Fedora/CentOS)
-```bash
+```sh
 sudo dnf install -y ffmpeg ffmpeg-devel
 # Or via RPM Fusion:
 sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
@@ -49,7 +49,7 @@ sudo dnf install -y ffmpeg
 ```
 
 ## Docker (any platform)
-```bash
+```sh
 # macOS / Linux
 docker run --rm -v "$(pwd):/work" -w /work jrottenberg/ffmpeg:latest \
   -i input.mp4 output.mp4

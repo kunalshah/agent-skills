@@ -5,7 +5,7 @@ Ready-to-use ffmpeg commands for 20+ platforms. Replace `"input.mp4"` with your 
 ## Video Platforms
 
 ### YouTube (1080p, high quality)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 18 -preset slow -profile:v high -level 4.0 \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
@@ -15,7 +15,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### YouTube Shorts (Vertical 9:16, 60s max)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
   -c:v libx264 -crf 18 -preset slow \
@@ -26,7 +26,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Vimeo (1080p, excellent quality)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 16 -preset slow -profile:v high \
   -c:a aac -b:a 320k -ar 48000 \
@@ -36,7 +36,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### TikTok (9:16, H.264, max 4GB / 60min)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
   -c:v libx264 -crf 23 -preset slow \
@@ -47,7 +47,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Instagram Reels (9:16, max 90s, 4GB)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
   -c:v libx264 -crf 23 -preset slow \
@@ -58,7 +58,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Instagram Feed (1:1 square or 4:5 portrait)
-```bash
+```sh
 # 1:1 Square
 ffmpeg -i "input.mp4" \
   -vf "scale=1080:1080:force_original_aspect_ratio=decrease,pad=1080:1080:(ow-iw)/2:(oh-ih)/2:black" \
@@ -70,7 +70,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Twitter/X (max 512MB, 2:20 duration, 1280x720)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black" \
   -c:v libx264 -b:v 5000k -maxrate 5000k -bufsize 10000k \
@@ -81,7 +81,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Facebook (1080p, H.264)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 -preset slow -profile:v high \
   -c:a aac -b:a 256k -ar 44100 \
@@ -93,7 +93,7 @@ ffmpeg -i "input.mp4" \
 ## Streaming Services
 
 ### Twitch Live (RTMP, 6000kbps recommended)
-```bash
+```sh
 ffmpeg -re -i "input.mp4" \
   -c:v libx264 -preset veryfast -b:v 6000k -maxrate 6000k -bufsize 12000k \
   -pix_fmt yuv420p -g 60 -keyint_min 60 \
@@ -102,7 +102,7 @@ ffmpeg -re -i "input.mp4" \
 ```
 
 ### OBS Virtual Camera Output (high quality, low latency)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 \
   -c:a aac -b:a 192k \
@@ -113,7 +113,7 @@ ffmpeg -i "input.mp4" \
 ## Mobile Platforms
 
 ### iOS (H.264, AAC, MP4 — maximum compatibility)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -profile:v high -level 4.0 -crf 23 \
   -c:a aac -b:a 192k -ar 44100 \
@@ -123,7 +123,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Android (H.264 or VP9)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libvpx-vp9 -crf 33 -b:v 0 \
   -c:a libopus -b:a 128k \
@@ -133,7 +133,7 @@ ffmpeg -i "input.mp4" \
 ## Professional / Post-Production
 
 ### Apple ProRes 422 HQ (editing, macOS)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v prores_ks -profile:v 3 \
   -c:a pcm_s16le \
@@ -141,7 +141,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Apple ProRes 4444 (with alpha channel)
-```bash
+```sh
 ffmpeg -i "input_with_alpha.mov" \
   -c:v prores_ks -profile:v 4 -pix_fmt yuva444p10le \
   -c:a pcm_s16le \
@@ -149,7 +149,7 @@ ffmpeg -i "input_with_alpha.mov" \
 ```
 
 ### Avid DNxHD 185 (1080p/29.97, editing)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v dnxhd -b:v 185M \
   -c:a pcm_s16le \
@@ -157,7 +157,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Lossless Archival (FFV1 + FLAC in MKV)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v ffv1 -level 3 -coder 1 -context 1 -g 1 -slices 24 \
   -c:a flac \
@@ -167,7 +167,7 @@ ffmpeg -i "input.mp4" \
 ## Web / HTML5
 
 ### Web MP4 (H.264, maximum compatibility)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 -preset slow -profile:v high -level 4.0 \
   -c:a aac -b:a 128k \
@@ -177,7 +177,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Web WebM (VP9, Chrome/Firefox)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libvpx-vp9 -crf 33 -b:v 0 \
   -c:a libopus -b:a 128k \
@@ -185,7 +185,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### Optimized GIF (web, under 5MB)
-```bash
+```sh
 # Step 1: palette
 ffmpeg -i "input.mp4" -ss 0 -t 10 \
   -vf "fps=12,scale=400:-1:flags=lanczos,palettegen=stats_mode=diff" \
@@ -200,7 +200,7 @@ ffmpeg -i "input.mp4" -i palette.png -ss 0 -t 10 \
 ## Messaging Platforms
 
 ### Discord (max 8MB for free users)
-```bash
+```sh
 # Auto-calculate bitrate for 8MB target
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "input.mp4")
 VBR=$(python3 -c "print(int(8*1024*8 / $DURATION - 128))")
@@ -214,7 +214,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### WhatsApp (max 16MB, max 3min)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=640:-2" \
   -c:v libx264 -b:v 500k -pass 1 -an -f null - && \
@@ -229,7 +229,7 @@ ffmpeg -i "input.mp4" \
 ## Podcast / Audio Only
 
 ### Podcast MP3 (stereo, 192kbps)
-```bash
+```sh
 ffmpeg -i "input.wav" \
   -c:a libmp3lame -q:a 2 -ac 2 \
   -metadata title="Episode Title" \
@@ -238,7 +238,7 @@ ffmpeg -i "input.wav" \
 ```
 
 ### Audiobook (mono, loudness-normalized)
-```bash
+```sh
 # Pass 1: measure — run this first and note the JSON values printed at the end
 ffmpeg -i "input.mp3" \
   -af "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" \

@@ -1,11 +1,11 @@
 ---
 name: audio-video
-description: "Expert audio/video processing with ffmpeg and ffprobe. Use when the user needs to convert, compress, edit, analyze, stream, or process any audio or video file. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe, stabilize video, video stabilization, shaky footage, 360 video, VR video, equirectangular, cubemap, v360, HDR, tone mapping, HDR to SDR, bt2020, smpte2084, color space, SRT streaming, low latency stream, multi-destination stream, tee muxer, restream, DVR recording, rolling window, repair video, corrupt video, VFR to CFR, variable frame rate, fix sync, metadata, chapter markers, cover art, strip metadata, embed chapters, SMPTE bars, test signal, packet analysis, encoding benchmark."
+description: "Expert audio/video processing with ffmpeg and ffprobe. Use when user wants to convert, compress, edit, analyze, stream, or process any audio/video. Triggers on: transcode, convert video, compress video, extract audio, trim clip, merge files, add subtitles, change bitrate, generate thumbnail, probe media, HLS stream, audio normalization, video filter, codec, fps, resolution, aspect ratio, waveform, spectrogram, ffmpeg, ffprobe, stabilize video, video stabilization, shaky footage, 360 video, VR video, equirectangular, cubemap, v360, HDR, tone mapping, HDR to SDR, bt2020, smpte2084, color space, SRT streaming, low latency stream, multi-destination stream, tee muxer, restream, DVR recording, rolling window, repair video, corrupt video, VFR to CFR, variable frame rate, fix sync, metadata, chapter markers, cover art, strip metadata, embed chapters, SMPTE bars, test signal, packet analysis, encoding benchmark."
 ---
 
 # Audio/Video Processing Skill
 
-You are an expert audio/video engineer with mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
+You are expert audio/video engineer with mastery of **ffmpeg** and **ffprobe**. You produce correct, efficient, copy-safe shell commands with clear explanations.
 
 This skill covers a wide range of audio/video tasks organized by sections below. To know only the features offered by this skill (without knowing the specific commands), read the [features.md](./assets/features.md) which is also organized by sections. `features.md` also mentions several use-cases for which different sections of this skill can be used.
 
@@ -13,9 +13,9 @@ This skill covers a wide range of audio/video tasks organized by sections below.
 
 ## STEP 0 — Tool Availability Check (ALWAYS RUN FIRST)
 
-Before generating any commands, verify the required tools are installed. Run or instruct the agent to run:
+Before generating any commands, verify the required tools are installed. Run:
 
-```bash
+```sh
 ffmpeg -version 2>&1 | head -1
 ffprobe -version 2>&1 | head -1
 ```
@@ -35,7 +35,7 @@ ffprobe -version 2>&1 | head -1
 Always inspect input files before building commands. Load `references/ffprobe-analysis.md` for full probe patterns.
 
 ### Quick probe
-```bash
+```sh
 # Full JSON output — machine-readable, use for scripting
 ffprobe -v quiet -print_format json -show_format -show_streams "input.mp4"
 
@@ -74,7 +74,7 @@ Load `references/ffmpeg-flags.md` for the complete flag reference.
 10. **Use `-ss` before `-i` for fast seek** (keyframe seek), after `-i` for accurate seek
 
 ### Command Template
-```bash
+```sh
 ffmpeg \
   [global options] \
   [input options] -i "input_file" \
@@ -91,7 +91,7 @@ Load `references/codecs-containers.md` for codec compatibility matrix.
 ### A1. Video Transcoding
 
 #### MP4 → High-quality H.264 (universal compatibility)
-```bash
+```sh
 ffmpeg -i "input.mov" \
   -c:v libx264 -crf 23 -preset slow \
   -c:a aac -b:a 192k \
@@ -101,7 +101,7 @@ ffmpeg -i "input.mov" \
 > `crf 18-28`: lower = better quality/larger file. `preset`: ultrafast→veryslow (speed vs compression).
 
 #### H.265/HEVC (better compression, modern devices)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx265 -crf 28 -preset slow \
   -c:a aac -b:a 128k \
@@ -111,7 +111,7 @@ ffmpeg -i "input.mp4" \
 > `-tag:v hvc1` required for Apple device compatibility.
 
 #### AV1 (best compression, slowest encode)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libaom-av1 -crf 30 -b:v 0 \
   -strict experimental \
@@ -120,7 +120,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 #### VP9 / WebM (web-optimized, royalty-free)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libvpx-vp9 -crf 30 -b:v 0 \
   -c:a libopus -b:a 128k \
@@ -128,7 +128,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 #### Hardware-accelerated encoding (macOS VideoToolbox)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v h264_videotoolbox -b:v 5M \
   -c:a aac -b:a 192k \
@@ -136,7 +136,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 #### Hardware-accelerated encoding (NVIDIA NVENC)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v h264_nvenc -preset p6 -cq 23 \
   -c:a aac -b:a 192k \
@@ -144,7 +144,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 #### Hardware-accelerated encoding (Intel QSV)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v h264_qsv -global_quality 23 \
   -c:a aac -b:a 192k \
@@ -152,7 +152,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### A2. Container Remuxing (No Re-encoding)
-```bash
+```sh
 # MP4 → MKV (stream copy, instant)
 ffmpeg -i "input.mp4" -c copy "output.mkv"
 
@@ -164,7 +164,7 @@ ffmpeg -i "input.mov" -c copy -movflags +faststart "output.mp4"
 ```
 
 ### A3. Image Sequence → Video
-```bash
+```sh
 # PNG sequence at 24fps
 ffmpeg -framerate 24 -i "frame_%04d.png" \
   -c:v libx264 -crf 18 -pix_fmt yuv420p \
@@ -178,7 +178,7 @@ ffmpeg -framerate 24 -i "frame_%04d.png" -i "audio.wav" \
 ```
 
 ### A4. Video → Image Sequence
-```bash
+```sh
 # Extract all frames
 ffmpeg -i "input.mp4" "frames/frame_%04d.png"
 
@@ -196,7 +196,7 @@ ffmpeg -i "input.mp4" -vf "select=eq(pict_type\,I)" -fps_mode vfr "keyframe_%04d
 
 
 ### B1. Audio Extraction
-```bash
+```sh
 # Extract audio as AAC (from MP4, keep original codec quality)
 ffmpeg -i "input.mp4" -c:a copy -vn "audio.aac"
 
@@ -214,7 +214,7 @@ ffmpeg -i "input.mp4" -c:a libopus -b:a 128k -vn "audio.opus"
 ```
 
 ### B2. Audio Conversion
-```bash
+```sh
 # MP3 → WAV
 ffmpeg -i "input.mp3" "output.wav"
 
@@ -229,7 +229,7 @@ ffmpeg -i "input_48k.wav" -ar 44100 "output_44k.wav"
 ```
 
 ### B3. Audio Normalization (EBU R128 Loudness)
-```bash
+```sh
 # Two-pass loudnorm (broadcast standard, recommended)
 # Pass 1: Measure
 ffmpeg -i "input.mp3" \
@@ -244,7 +244,7 @@ ffmpeg -i "input.mp3" \
 ```
 
 ### B4. Audio Filters
-```bash
+```sh
 # Volume adjustment (+6dB)
 ffmpeg -i "input.mp3" -af "volume=6dB" "output_louder.mp3"
 
@@ -272,7 +272,7 @@ ffmpeg -i "input.mp3" \
 ```
 
 ### B5. Advanced Audio Processing
-```bash
+```sh
 # Trim silence (remove leading/trailing silence)
 ffmpeg -i "input.wav" -af "silenceremove=start_periods=1:start_silence=0.1:start_threshold=0.01:stop_periods=-1:stop_silence=0.1:stop_threshold=0.01" "output.wav"
 
@@ -296,7 +296,7 @@ ffmpeg -i "input.wav" -lavfi "showspectrumpic=s=1024x512:mode=combined" -update 
 
 
 ### C1. Trimming & Cutting
-```bash
+```sh
 # Fast trim (keyframe-accurate, stream copy — may be slightly imprecise at start)
 ffmpeg -ss 00:01:30 -to 00:03:00 -i "input.mp4" -c copy "clip.mp4"
 
@@ -316,7 +316,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### C2. Concatenation
-```bash
+```sh
 # Concat same-codec files (no re-encode, fastest)
 # Create filelist.txt:
 printf "file '%s'\n" *.mp4 > filelist.txt
@@ -338,7 +338,7 @@ ffmpeg -i "part1.mp4" -i "part2.mp4" \
 ```
 
 ### C3. Scaling & Resolution
-```bash
+```sh
 # Scale to 1920x1080, maintain aspect ratio (pad with black)
 ffmpeg -i "input.mp4" \
   -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
@@ -361,7 +361,7 @@ ffmpeg -i "input.mp4" -vf "scale=-2:480" -c:v libx264 -crf 23 "output_480p.mp4"
 ```
 
 ### C4. Frame Rate Conversion
-```bash
+```sh
 # Change to 30fps (duplicate/drop frames)
 ffmpeg -i "input.mp4" -vf fps=30 -c:v libx264 -crf 23 "output_30fps.mp4"
 
@@ -373,7 +373,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### C5. Rotation & Flipping
-```bash
+```sh
 # Rotate 90° clockwise
 ffmpeg -i "input.mp4" -vf "transpose=1" -c:a copy "output_rotated.mp4"
 # transpose: 0=90°CCW+vflip, 1=90°CW, 2=90°CCW, 3=90°CW+vflip
@@ -395,7 +395,7 @@ ffmpeg -i "input.mp4" -c:v libx264 -crf 23 -c:a copy \
 ```
 
 ### C6. Cropping
-```bash
+```sh
 # Crop to 1280x720 starting at (100,50)
 ffmpeg -i "input.mp4" -vf "crop=1280:720:100:50" -c:a copy "output_cropped.mp4"
 
@@ -412,7 +412,7 @@ ffmpeg -i "input.mp4" -vf "crop=1920:800:0:140" -c:a copy "output_cropped.mp4"
 ```
 
 ### C7. Overlays & Watermarks
-```bash
+```sh
 # Add image watermark (bottom-right, 10px margin)
 ffmpeg -i "input.mp4" -i "watermark.png" \
   -filter_complex "overlay=W-w-10:H-h-10" \
@@ -435,7 +435,7 @@ ffmpeg -i "main.mp4" -i "pip.mp4" \
 ```
 
 ### C8. Color Correction & Grading
-```bash
+```sh
 # Brightness, contrast, saturation
 ffmpeg -i "input.mp4" \
   -vf "eq=brightness=0.06:contrast=1.2:saturation=1.5:gamma=1.0" \
@@ -463,7 +463,7 @@ ffmpeg -i "input.mp4" \
 
 
 ### D1. Subtitle Operations
-```bash
+```sh
 # Burn subtitles into video (hard subtitles)
 ffmpeg -i "input.mp4" -vf "subtitles=subs.srt" -c:a copy "output_burned.mp4"
 
@@ -490,7 +490,7 @@ ffmpeg -i "subs.srt" "subs.ass"
 ## SECTION E — Thumbnails & Screenshots
 
 ### E1. Thumbnail Generation
-```bash
+```sh
 # Single thumbnail at specific timestamp
 ffmpeg -i "input.mp4" -ss 00:00:05 -vframes 1 "thumbnail.jpg"
 
@@ -516,7 +516,7 @@ ffmpeg -i "input.mp4" -vf "fps=1/10,scale=320:-1" "thumbs/thumb_%04d.jpg"
 
 
 ### F1. HLS (HTTP Live Streaming)
-```bash
+```sh
 # Generate HLS segments with master playlist
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 -preset fast \
@@ -545,7 +545,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### F2. DASH (Dynamic Adaptive Streaming over HTTP)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 -preset fast \
   -c:a aac -b:a 128k \
@@ -557,7 +557,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### F3. RTMP Live Streaming
-```bash
+```sh
 # Stream to RTMP endpoint (YouTube, Twitch, etc.)
 ffmpeg -re -i "input.mp4" \
   -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize 9000k \
@@ -578,7 +578,7 @@ ffmpeg \
 ## SECTION G — Screen & Webcam Capture
 
 ### G1. Screen Recording
-```bash
+```sh
 # macOS (AVFoundation) — list devices first
 ffmpeg -f avfoundation -list_devices true -i ""
 
@@ -604,7 +604,7 @@ ffmpeg -f gdigrab -framerate 30 -i desktop \
 ```
 
 ### G2. Webcam Capture
-```bash
+```sh
 # macOS
 ffmpeg -f avfoundation -framerate 30 -video_size 1280x720 -i "0" \
   -c:v libx264 -crf 23 "webcam.mp4"
@@ -623,7 +623,7 @@ ffmpeg -f dshow -i video="Integrated Camera" \
 ## SECTION H — GIF & Animated Images
 
 ### H1. Video → GIF (High Quality)
-```bash
+```sh
 # Two-pass high-quality GIF (palette generation)
 # Pass 1: Generate optimal palette
 ffmpeg -i "input.mp4" \
@@ -637,12 +637,12 @@ ffmpeg -i "input.mp4" -i "palette.png" \
 ```
 
 ### H2. GIF → Video
-```bash
+```sh
 ffmpeg -i "input.gif" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "output.mp4"
 ```
 
 ### H3. WebP Animation
-```bash
+```sh
 ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
   -loop 0 -preset default -an -fps_mode passthrough \
   "output.webp"
@@ -654,7 +654,7 @@ ffmpeg -i "input.mp4" -vf "fps=24,scale=480:-1:flags=lanczos" \
 ## SECTION I — Batch Processing & Scripting
 
 ### I1. Batch Convert (Shell)
-```bash
+```sh
 # Convert all .mov files to .mp4 (bash/zsh — macOS/Linux only)
 for f in *.mov; do
   ffmpeg -i "$f" \
@@ -675,7 +675,7 @@ printf '%s\n' *.mov | parallel -j4 'ffmpeg -i {} -c:v libx264 -crf 23 {.}.mp4'
 ```
 
 ### I2. Progress Monitoring
-```bash
+```sh
 # Machine-readable progress output
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 \
@@ -699,7 +699,7 @@ for line in sys.stdin:
 ```
 
 ### I3. Two-Pass Encoding (Precise Bitrate Control)
-```bash
+```sh
 # Pass 1 (analysis only)
 ffmpeg -y -i "input.mp4" \
   -c:v libx264 -b:v 2M -pass 1 -an -f null -
@@ -716,7 +716,7 @@ ffmpeg -i "input.mp4" \
 ## SECTION J — Advanced Filtergraphs
 
 ### J1. Complex Filter Examples
-```bash
+```sh
 # Side-by-side video comparison
 ffmpeg -i "original.mp4" -i "processed.mp4" \
   -filter_complex "[0:v][1:v]hstack=inputs=2[v]" \
@@ -763,7 +763,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### J2. Audio/Video Sync Repair
-```bash
+```sh
 # Fix audio delay (audio is 500ms late)
 ffmpeg -i "input.mp4" -itsoffset -0.5 -i "input.mp4" \
   -map 1:v -map 0:a -c copy "output_synced.mp4"
@@ -778,7 +778,7 @@ ffmpeg -i "input.mp4" -itsoffset 0.5 -i "input.mp4" \
 ## SECTION K — Quality Analysis & Verification
 
 ### K1. Quality Metrics
-```bash
+```sh
 # PSNR (Peak Signal-to-Noise Ratio) — higher is better
 ffmpeg -i "original.mp4" -i "compressed.mp4" \
   -lavfi psnr="stats_file=psnr.log" -f null -
@@ -797,7 +797,7 @@ ffmpeg -i "original.mp4" -i "compressed.mp4" \
 
 After every encode, verify:
 
-```bash
+```sh
 # Check output is valid and playable
 ffprobe -v error -show_entries \
   format=duration,size,bit_rate \
@@ -816,7 +816,7 @@ ffmpeg -v error -i "output.mp4" -f null - 2>&1 | head -n 20
 ## SECTION L — Platform-Specific Presets
 
 ### L1. Web (HTML5 video)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 23 -preset slow \
   -c:a aac -b:a 128k \
@@ -827,7 +827,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### L2. YouTube Upload
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v libx264 -crf 18 -preset slow \
   -c:a aac -b:a 384k -ar 48000 \
@@ -838,7 +838,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### L3. Instagram / TikTok (Vertical 9:16)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
   -c:v libx264 -crf 23 -preset slow \
@@ -848,7 +848,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### L4. Apple ProRes (Post-production)
-```bash
+```sh
 ffmpeg -i "input.mp4" \
   -c:v prores_ks -profile:v 3 \
   -c:a pcm_s16le \
@@ -857,7 +857,7 @@ ffmpeg -i "input.mp4" \
 ```
 
 ### L5. Discord / Messaging (8MB limit)
-```bash
+```sh
 # Calculate target bitrate for 8MB / duration
 DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "input.mp4")
 TARGET_KBPS=$(python3 -c "print(int(8*1024*8 / $DURATION - 128))")
@@ -877,7 +877,7 @@ Stabilize shaky footage from handheld cameras, drones, or action cameras. Uses a
 
 ### Check libvidstab availability
 
-```bash
+```sh
 ffmpeg -filters 2>&1 | grep vidstab
 # Should show: vidstabdetect, vidstabtransform
 ```
@@ -888,13 +888,13 @@ ffmpeg -filters 2>&1 | grep vidstab
 - Windows: Download from https://www.gyan.dev/ffmpeg/builds/ (full build includes libvidstab)
 
 ### Pass 1 — Detect motion (analyze shakiness)
-```bash
+```sh
 # shakiness: 1 (low) to 10 (high). accuracy: 1-15, higher = better but slower.
 ffmpeg -i input.mp4 -vf vidstabdetect=shakiness=5:accuracy=15:result=transforms.trf -f null -
 ```
 
 ### Pass 2 — Apply stabilization
-```bash
+```sh
 # smoothing: number of frames to average (higher = smoother but more crop). zoom: extra zoom to hide black borders.
 ffmpeg -i input.mp4 \
   -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" \
@@ -902,7 +902,7 @@ ffmpeg -i input.mp4 \
 ```
 
 ### One-liner (both passes)
-```bash
+```sh
 ffmpeg -i input.mp4 -vf vidstabdetect=shakiness=5:accuracy=15:result=transforms.trf -f null - && \
 ffmpeg -i input.mp4 -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=30,unsharp=5:5:0.8:3:3:0.4" \
   -c:v libx264 -crf 18 -c:a copy stabilized.mp4
@@ -929,23 +929,23 @@ ffmpeg -i input.mp4 -vf "vidstabtransform=input=transforms.trf:zoom=1:smoothing=
 Handle 360° footage from cameras like GoPro Max, Insta360, Ricoh Theta. Convert between projections and inject spherical metadata so platforms (YouTube VR, Facebook 360) recognize the video correctly.
 
 ### Check v360 filter availability
-```bash
+```sh
 ffmpeg -filters 2>&1 | grep v360
 ```
 
 ### Convert equirectangular → cubemap (3x2 layout)
-```bash
+```sh
 # Input must be 2:1 aspect ratio (e.g. 3840x1920)
 ffmpeg -i input_360.mp4 -vf "v360=equirect:c3x2" -c:v libx264 -crf 18 -c:a copy cubemap.mp4
 ```
 
 ### Convert cubemap → equirectangular
-```bash
+```sh
 ffmpeg -i cubemap.mp4 -vf "v360=c3x2:equirect" -c:v libx264 -crf 18 -c:a copy equirect.mp4
 ```
 
 ### Inject spherical metadata (YouTube VR / Facebook 360)
-```bash
+```sh
 # Inject metadata so platforms recognize as 360° video
 ffmpeg -i input_360.mp4 -c copy \
   -metadata:s:v:0 spherical-video=equirectangular \
@@ -955,7 +955,7 @@ ffmpeg -i input_360.mp4 -c copy \
 > **Note:** For full YouTube VR compliance, use Google's [spatial-media tool](https://github.com/google/spatial-media) after encoding to inject the proper XMP metadata atom. FFmpeg metadata injection is a best-effort fallback.
 
 ### Reframe / extract a flat view from 360° video
-```bash
+```sh
 # Extract a flat 1920x1080 view from equirectangular (yaw=0, pitch=0, fov=90)
 ffmpeg -i input_360.mp4 \
   -vf "v360=equirect:flat:yaw=0:pitch=0:roll=0:h_fov=90:v_fov=90:w=1920:h=1080" \
@@ -972,14 +972,14 @@ The `v360` filter works identically on all platforms — no platform-specific fl
 Handle HDR10 content from modern phones (iPhone, Android) and cameras. Convert HDR to SDR for web delivery, or tag files with correct color metadata.
 
 ### Check color filters availability
-```bash
+```sh
 ffmpeg -filters 2>&1 | grep -E "zscale|colorspace|tonemap"
 ```
 
 > **If zscale is missing:** Install with `--enable-libzimg`. macOS: `brew install ffmpeg-full`. Linux: `sudo apt install ffmpeg` (20.04+). Windows: use full build from gyan.dev.
 
 ### HDR10 → SDR tone mapping (real HDR source required)
-```bash
+```sh
 # Use this when input is a genuine HDR10 file (bt2020/smpte2084 color space)
 # Pass 1: verify input is HDR
 ffprobe -v quiet -select_streams v:0 -show_entries stream=color_space,color_transfer,color_primaries -of default input.mp4
@@ -991,7 +991,7 @@ ffmpeg -i input_hdr10.mp4 \
 ```
 
 ### Colorspace conversion (SDR bt2020 → bt709)
-```bash
+```sh
 # For files tagged bt2020 but not true HDR (common from some Android phones)
 ffmpeg -i input.mp4 \
   -vf "colorspace=bt709:iall=bt2020:fast=1" \
@@ -999,7 +999,7 @@ ffmpeg -i input.mp4 \
 ```
 
 ### Encode HDR10 output (for archival/editing)
-```bash
+```sh
 # Encode to HDR10 with proper metadata
 ffmpeg -i input.mp4 \
   -vf "format=yuv420p10le" \
@@ -1009,7 +1009,7 @@ ffmpeg -i input.mp4 \
 ```
 
 ### Tag existing file with correct color metadata (no re-encode)
-```bash
+```sh
 ffmpeg -i input.mp4 -c copy \
   -color_primaries bt2020 \
   -color_trc smpte2084 \
@@ -1036,7 +1036,7 @@ Commands are identical across platforms. Ensure ffmpeg is built with `--enable-l
 
 SRT handles packet loss and network jitter, making it ideal for unstable connections (cellular, satellite, long-distance contribution).
 
-```bash
+```sh
 # Check SRT support
 ffmpeg -protocols 2>&1 | grep srt
 
@@ -1058,7 +1058,7 @@ ffmpeg -re -i input.mp4 -c:v libx264 -b:v 4000k -c:a aac \
 
 Stream to YouTube, Twitch, and Facebook simultaneously from one ffmpeg process:
 
-```bash
+```sh
 ffmpeg -re -i input.mp4 \
   -c:v libx264 -b:v 4500k -maxrate 4500k -bufsize 9000k \
   -c:a aac -b:a 128k -ar 44100 \
@@ -1072,7 +1072,7 @@ ffmpeg -re -i input.mp4 \
 
 Continuous loop recording — keeps only the last N segments (useful for security cameras, broadcast monitoring):
 
-```bash
+```sh
 # Record in 60-second segments, keep only last 10 (10 minutes of rolling buffer)
 # segment_wrap=10 means segment_000 through segment_009, then wraps back
 ffmpeg -i input_stream_or_device \
@@ -1107,7 +1107,7 @@ ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="Microphone" `
 ## SECTION Q — Repair & Recovery
 
 ### Recover from corrupt or truncated files
-```bash
+```sh
 # Attempt recovery — ignore errors and discard corrupt packets
 ffmpeg -i corrupt_input.mp4 \
   -c copy \
@@ -1129,7 +1129,7 @@ ffmpeg -f matroska -i corrupt_input.mkv -c copy recovered.mkv
 
 Variable frame rate (VFR) footage — common from phones and screen recorders — causes audio sync drift in editing software. Convert to constant frame rate (CFR):
 
-```bash
+```sh
 # Convert to CFR at 30fps (re-encodes video)
 ffmpeg -i input_vfr.mp4 -vsync cfr -r 30 -c:v libx264 -crf 18 -c:a copy cfr_output.mp4
 
@@ -1141,7 +1141,7 @@ ffprobe -v quiet -select_streams v:0 \
 ```
 
 ### Fix audio/video sync offset
-```bash
+```sh
 # Audio is N seconds late (positive = delay audio, negative = advance audio)
 ffmpeg -i input.mp4 -itsoffset 0.5 -i input.mp4 \
   -map 0:v -map 1:a -c copy sync_fixed.mp4
@@ -1152,7 +1152,7 @@ ffmpeg -i input.mp4 -c:v copy -af "adelay=500|500" sync_fixed.mp4
 ```
 
 ### Rebuild broken index / moov atom
-```bash
+```sh
 # Re-mux to fix index (fast, no quality loss)
 ffmpeg -i input.mp4 -c copy -movflags +faststart fixed.mp4
 ```
@@ -1165,7 +1165,7 @@ All recovery commands are platform-independent. On Windows PowerShell, use backt
 ## SECTION R — Metadata Management
 
 ### Embed key/value metadata tags
-```bash
+```sh
 # Add title, artist, year, comment
 ffmpeg -i input.mp4 \
   -metadata title="My Video" \
@@ -1184,7 +1184,7 @@ ffmpeg -i input.mp3 \
 ```
 
 ### Strip all metadata (privacy)
-```bash
+```sh
 # Remove all metadata from file
 ffmpeg -i input.mp4 -map_metadata -1 -c copy stripped.mp4
 
@@ -1193,7 +1193,7 @@ ffprobe -v quiet -show_format -of json stripped.mp4 | python3 -c "import sys,jso
 ```
 
 ### Add chapter markers
-```bash
+```sh
 # Step 1: Create a chapters metadata file (chapters.txt)
 cat > chapters.txt << 'EOF'
 ;FFMETADATA1
@@ -1226,7 +1226,7 @@ ffprobe -v quiet -show_chapters chaptered.mp4
 > **Windows (PowerShell):** Write chapters.txt manually with a text editor, then run the ffmpeg step 2 command.
 
 ### Embed cover art into audio file (MP3, M4A, AAC)
-```bash
+```sh
 # Embed cover art into MP3
 ffmpeg -i input.mp3 -i cover.jpg \
   -map 0 -map 1 \
@@ -1243,7 +1243,7 @@ ffmpeg -i input.m4a -i cover.jpg \
 ```
 
 ### Multi-language audio/subtitle track management
-```bash
+```sh
 # Add language tag to existing track
 ffmpeg -i input.mp4 -c copy \
   -metadata:s:a:0 language=eng \
@@ -1258,7 +1258,7 @@ ffmpeg -i input.mp4 -map 0 -map -0:a:1 -c copy removed_track.mp4
 ```
 
 ### Read all metadata
-```bash
+```sh
 ffprobe -v quiet -show_format -show_streams -of json input.mp4 | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -1277,7 +1277,7 @@ for i, s in enumerate(d['streams']):
 ## SECTION S — Testing & Debugging
 
 ### Generate SMPTE color bars + tone (calibration signal)
-```bash
+```sh
 # Standard SMPTE color bars with 1kHz test tone — use to verify encoding pipeline
 ffmpeg -f lavfi -i "smptebars=duration=10:size=1920x1080:rate=30" \
        -f lavfi -i "sine=frequency=1000:duration=10" \
@@ -1294,7 +1294,7 @@ ffmpeg -f lavfi -i "smptehdbars=duration=10:size=1920x1080:rate=30" \
 ```
 
 ### Packet-level analysis (find corruption, missing keyframes)
-```bash
+```sh
 # List all video packets with PTS, DTS, size, flags
 ffprobe -v quiet -select_streams v:0 \
   -show_packets -of json input.mp4 | python3 -c "
@@ -1319,7 +1319,7 @@ ffmpeg -v error -i input.mp4 -f null NUL 2>&1 | Select-String -Pattern "corrupt|
 ```
 
 ### Encoding benchmark (compare presets)
-```bash
+```sh
 # Benchmark H.264 presets — measures encode speed and output size
 python3 - << 'EOF'
 import subprocess, time, os
@@ -1349,7 +1349,7 @@ EOF
 ```
 
 ### Bit stream filter debugging
-```bash
+```sh
 # Dump raw H.264 NAL units for inspection
 ffmpeg -i input.mp4 -c:v copy -bsf:v trace_headers -f null - 2>&1 | head -50
 
